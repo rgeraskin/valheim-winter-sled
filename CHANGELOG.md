@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.1
+
+- The vanilla cart gets a seat too: a passenger's, with no steering or brakes (someone pulls, or it rolls). `CartSeat` turns it off.
+- Getting off (Jump) stands you up in the sled, where you sat, instead of on the ground beside it; you step or jump off from there.
+- The cargo stays in sight while someone rides: only the crates under the rider hide, and they hide or show at once.
+- Pushing off with W is now a kick per press that costs stamina (`PushImpulse`, `PushStamina`), instead of a steady push that drove the sled across flat ice like a car. `PushForce` is gone.
+- A sled left standing is held by static friction (its runners settle into the snow), but no longer on ice, where a bumped sled now slides. `ParkSpeed` is now `StaticFrictionSpeed`.
+- Runner sound: it follows the sled's speed smoothly instead of rising and falling with every step, the loops are longer and seamless, and ice is an iron-on-ice scrape instead of a whistle. The wind plays only for a rider.
+- The surface on the status icon (and the hauling speed and sound with it) no longer flickers between snow and deep snow.
+
 ## 0.1.0
 
 First release.

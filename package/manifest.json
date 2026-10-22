@@ -1,6 +1,6 @@
 {
   "name": "WinterSled",
-  "version_number": "0.1.0",
+  "version_number": "0.1.1",
   "website_url": "https://github.com/rgeraskin/valheim-winter-sled",
   "description": "A cargo sled that works like the cart but glides on snow and ice, drags on bare ground, and can be ridden downhill. Seasons/Seasonality aware.",
   "dependencies": [
