@@ -10,7 +10,7 @@ namespace WinterSled
     internal class SledSeat : MonoBehaviour, Interactable, Hoverable, IDoodadController
     {
         public Transform m_attachPoint;
-        public Vector3 m_detachOffset = new Vector3(1.3f, 0.4f, 0f);
+        public Vector3 m_detachOffset = new Vector3(0f, 0.05f, 0f);
         public float m_useDistance = 3f;
 
         private static readonly int s_rider = "wintersled_rider".GetStableHashCode();
@@ -94,22 +94,18 @@ namespace WinterSled
         }
 
         /// <summary>
-        /// The attach detach offset doesn't stick on a moving rigidbody (the rider stays inside the bed),
-        /// so put the rider on the ground beside the sled, body and transform both.
+        /// The rider stands up where they sat, on the deck, and steps or jumps off from there; moving with the sled,
+        /// so a sled in motion doesn't throw them backwards. (The attach detach offset doesn't stick on a moving
+        /// rigidbody, so the body is placed directly.)
         /// </summary>
         private void StepOff(Player player)
         {
-            var sled = m_sled != null ? m_sled.transform : transform;
-            var pos = sled.TransformPoint(new Vector3(1.4f, 0f, -0.6f));
-            if (ZoneSystem.instance != null && ZoneSystem.instance.GetSolidHeight(pos + Vector3.up * 2f, out float h))
-            {
-                pos.y = Mathf.Max(h, pos.y) + 0.05f;
-            }
+            var pos = m_attachPoint.position + Vector3.up * 0.05f;
             player.transform.position = pos;
             if (player.m_body != null)
             {
                 player.m_body.position = pos;
-                player.m_body.linearVelocity = m_sled != null ? m_sled.GetComponent<Rigidbody>().linearVelocity * 0.5f : Vector3.zero;
+                player.m_body.linearVelocity = m_sled != null ? m_sled.GetComponent<Rigidbody>().GetPointVelocity(pos) : Vector3.zero;
             }
         }
 

@@ -298,7 +298,7 @@ namespace WinterSledDevHarness
                     yield return Teleport(new Vector3(F(a[1]), 0f, F(a[2])), a.Length > 3 ? F(a[3]) : 0f, onWater: true);
                     break;
                 case "spawn":
-                    SpawnSled(a.Length > 1 ? F(a[1]) : 4f, a.Length > 2 ? a[2] : SledBuilder.PrefabName);
+                    SpawnSled(a.Length > 1 ? F(a[1]) : 4f, a.Length > 2 ? a[2] : SledBuilder.PrefabName, a.Length > 3 && a[3] == "keep");
                     break;
                 case "attach":
                     yield return AttachToSled();
@@ -688,7 +688,7 @@ namespace WinterSledDevHarness
             Log($"cleared {removed} objects within {radius} m");
         }
 
-        private void SpawnSled(float distance, string prefabName)
+        private void SpawnSled(float distance, string prefabName, bool keep = false)
         {
             var player = Player.m_localPlayer;
             var fwd = Vector3.ProjectOnPlane(player.transform.forward, Vector3.up).normalized;
@@ -697,7 +697,8 @@ namespace WinterSledDevHarness
             {
                 pos.y = Mathf.Max(h, ZoneSystem.instance.m_waterLevel) + 0.3f;
             }
-            if (m_sled != null)
+            // keep: leave the previous one standing (e.g. a cart next to the sled, to compare)
+            if (m_sled != null && !keep)
             {
                 ZNetScene.instance.Destroy(m_sled);
             }

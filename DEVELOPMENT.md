@@ -62,7 +62,7 @@ WINTERSLED_REMOTE = "user@windows-pc.local"
 
 Scripts in `tools/harness/`: `remote-ps.sh` (PowerShell over SSH, script on stdin), `remote-cmd.sh` (send harness commands, wait for `done`), `remote-redeploy.sh [Key=value...]` (copy DLLs, set config keys, restart, wait for the world).
 
-Harness commands: `waitplayer`, `god [time]`, `hud on|off` (also hides messages and name plates), `tp x z [yaw]`, `findbiome <Biome> [radius] [minSlope] [maxSlope]`, `tpwater x z [yaw]` (over water, onto whatever is there), `equip <item...>` (dress the test character), `loadvis` (where the cargo crates sit), `god off` (mortal again: real stamina and damage), `clear <r>`, `look <yaw>`, `faceslope up|down`, `spawn [dist] [prefab]`, `sledpos <behind>`, `attach`, `detach`, `sit`, `move fwd|back|left|right|fl|fr|stop [run]`, `input x z`, `jump`, `release`, `load <item> <n>`, `state`, `record <sec> [step]`, `shot <name> [sled|player|game] [yaw] [pitch] [dist] [height]`, `anims`, `materials`, `quit`.
+Harness commands: `waitplayer`, `god [time]`, `hud on|off` (also hides messages and name plates), `tp x z [yaw]`, `findbiome <Biome> [radius] [minSlope] [maxSlope]`, `tpwater x z [yaw]` (over water, onto whatever is there), `equip <item...>` (dress the test character), `loadvis` (where the cargo crates sit), `god off` (mortal again: real stamina and damage), `clear <r>`, `look <yaw>`, `faceslope up|down`, `spawn [dist] [prefab] [keep]`, `sledpos <behind>`, `attach`, `detach`, `sit`, `move fwd|back|left|right|fl|fr|stop [run]`, `input x z`, `jump`, `release`, `load <item> <n>`, `state`, `record <sec> [step]`, `shot <name> [sled|player|game] [yaw] [pitch] [dist] [height]`, `anims`, `materials`, `quit`.
 
 ## Measured (Valheim 1.0.15, Windows)
 
@@ -81,7 +81,7 @@ Test course (built live with the World Editor in world SledTest, x -1628..-1604)
 | steering (A/D) | ~45° heading change in 2 s at 6 m/s |
 | parked on a slope, unattended | stays put; let go at speed it keeps sliding |
 
-Fixed along the way: PhysX per-point contact impulses double-counted the normal force (now weight based); a parked (sleeping) body ignored the rider; steering was too weak (torque gain 5 → 20); brake too harsh (0.45 → 0.2); the rider stayed inside the bed after jumping off (now stepped off beside the sled); the pelt was hidden under the uneven deck planks (raised); the build icon showed the cart's cargo crates.
+Fixed along the way: PhysX per-point contact impulses double-counted the normal force (now weight based); a parked (sleeping) body ignored the rider; steering was too weak (torque gain 5 → 20); brake too harsh (0.45 → 0.2); the rider stayed inside the bed after jumping off (first stepped off beside the sled, which looked like sitting down beside it; now stands up on the deck, carried along with the sled, and steps or jumps off); the pelt was hidden under the uneven deck planks (raised); the build icon showed the cart's cargo crates.
 
 Note: the test character takes Freezing and teleport-fall damage (harness artefacts); the harness `god` command keeps its health full. The mod itself never heals.
 
