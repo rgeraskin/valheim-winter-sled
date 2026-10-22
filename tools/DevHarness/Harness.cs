@@ -362,6 +362,34 @@ namespace WinterSledDevHarness
                         Log($"body interpolation={rb.interpolation} fixedDt={Time.fixedDeltaTime:0.000} fps={1f / Time.smoothDeltaTime:0} owner={m_sled.GetComponent<ZNetView>().IsOwner()}");
                     }
                     break;
+                case "colliders":
+                    {
+                        // colliders <r>: what is around the last spawned vehicle, with layers (and its own colliders' layers)
+                        float r = a.Length > 1 ? F(a[1]) : 3f;
+                        var own = new HashSet<Collider>(m_sled.GetComponentsInChildren<Collider>(true));
+                        foreach (var c in own)
+                        {
+                            Log($"own {c.name} [{c.GetType().Name}] layer={LayerMask.LayerToName(c.gameObject.layer)} trigger={c.isTrigger} enabled={c.enabled} mat={(c.sharedMaterial ? c.sharedMaterial.name : "-")}");
+                        }
+                        foreach (var c in Physics.OverlapSphere(m_sled.transform.position, r, ~0, QueryTriggerInteraction.Collide).Where(c => !own.Contains(c)).Take(40))
+                        {
+                            var root = c.transform.root;
+                            Log($"near {c.name} (root {root.name}) [{c.GetType().Name}] layer={LayerMask.LayerToName(c.gameObject.layer)} trigger={c.isTrigger} mat={(c.sharedMaterial ? c.sharedMaterial.name : "-")}");
+                        }
+                    }
+                    break;
+                case "chairs":
+                    // the chairs and seats on the last spawned vehicle, active or not
+                    foreach (var c in m_sled.GetComponentsInChildren<Chair>(true))
+                    {
+                        var col = c.GetComponent<Collider>();
+                        Log($"Chair {c.name} activeInHierarchy={c.gameObject.activeInHierarchy} enabled={c.enabled} collider={(col ? col.GetType().Name + (col.enabled ? "" : "(off)") : "none")} name={c.m_name} attach={(c.m_attachPoint ? m_sled.transform.InverseTransformPoint(c.m_attachPoint.position).ToString("F2") : "-")} anim={c.m_attachAnimation} layer={LayerMask.LayerToName(c.gameObject.layer)}");
+                    }
+                    foreach (var c in m_sled.GetComponentsInChildren<SledSeat>(true))
+                    {
+                        Log($"SledSeat {c.name} attach={m_sled.transform.InverseTransformPoint(c.m_attachPoint.position).ToString("F2")}");
+                    }
+                    break;
                 case "loadvis":
                     // where the cargo crates sit in the bed, in the sled's own space
                     foreach (var lv in m_sled.GetComponent<Vagon>().m_loadVis)
