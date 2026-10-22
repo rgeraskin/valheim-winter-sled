@@ -1,0 +1,58 @@
+[size=4][b]Description[/b][/size]
+A cargo sled for Valheim. Hitch it, load it, haul it — just like the cart, except this one actually likes winter. Reindeer not included: you are the reindeer.
+
+It rides on runners instead of wheels, so how it moves depends on what is under it:
+[list]
+[*][b]Snow and ice[/b]: it glides as if it was born for this. Pulling it feels like cheating.
+[*][b]Frozen ground[/b] (cleared ground in the Mountains and the Deep North): the runners scrape and complain, but keep going.
+[*][b]Bare ground[/b] in the warm biomes: the sled becomes a very heavy plough. You walk slowly, tire quickly and start to question your choices, more so with a full load.
+[*][b]Wood floors, roads and rock[/b]: neither here nor there.
+[/list]
+That makes it the cart's winter rival: the cart wins on grass, the sled wins in snow. To keep things fair, [b]wheels now sink in snow[/b] — the cart had it too easy (you can turn that off if you feel sorry for it).
+
+You can also [b]sit in it and ride down a snowy slope[/b]: steer with A/D, brake with your heels on S, push off with W, and jump to bail out. A parked sled stays put on a slope. A sled you let go of at full speed does not: it has places to be. Odin does not cover runaway sleds.
+
+While you pull it, an icon shows what the runners are on — snow, deep snow, ice, frozen ground, wood, stone or ground — in case your legs haven't told you already.
+
+[size=4][b]Installation instructions[/b][/size]
+[list]
+[*]With Vortex: click "Mod Manager Download".
+[*]By hand: unpack the archive into the Valheim folder, so that the files end up in [b]BepInEx/plugins/WinterSled[/b].
+[*]Multiplayer: everyone on the server needs the mod, the server too.
+[/list]
+The sled is in the Hammer → Misc tab, at a workbench: [b]20 Wood, 10 Fine wood, 4 Iron, 2 Wolf pelt[/b]. It unlocks with your first iron and wolf pelt — about when the Mountains start trying to freeze you to death. With Seasons or Seasonality winter comes much sooner, and so does the sled: it costs [b]20 Wood, 8 Leather scraps, 10 Bronze nails[/b] instead, like the cart.
+
+Settings: [b]BepInEx/config/rgeraskin.WinterSled.cfg[/b], or in the game with [url=https://thunderstore.io/c/valheim/p/Azumatt/Official_BepInEx_ConfigurationManager/]Configuration Manager[/url] (F1). Changes apply right away, also to sleds already built. They go from what you are most likely to change to the fine tuning:
+[list]
+[*][b]1 - General[/b]: both recipes, and how much wheels sink in snow.
+[*][b]2 - Sound and effects[/b]: volume, snow spray, riding pose (each player's own).
+[*][b]3 - Hauling[/b]: how hard pulling is on each surface and with a load.
+[*][b]4 - Riding[/b]: top speed, steering, brake, push-off, crash damage.
+[*][b]5 and 6 - Advanced[/b]: runner friction per surface and physics, hidden in Configuration Manager until you tick "Advanced settings".
+[/list]
+Everything that changes how the sled moves comes from the server (admin only), so all players ride the same sled.
+
+[size=4][b]Main features[/b][/size]
+[list]
+[*][b]Sounds[/b]: the runners hiss on snow, sing on ice, scrape on frozen ground and grumble on dirt, and at speed the wind joins in. The volume is in the settings, for those who prefer to sled in dignified silence.
+[*][b]Seasons[/b]: plays along with [url=https://thunderstore.io/c/valheim/p/shudnal/Seasons/]Seasons[/url] (shudnal) and [url=https://thunderstore.io/c/valheim/p/RustyMods/Seasonality/]Seasonality[/url] (RustyMods). When winter reaches the Meadows, the sled is the first to celebrate: it glides through snowy meadows, forests and plains, and frozen lakes and sea become the fastest roads in Midgard (with Seasonality, turn on its "Water Freezes" option).
+[*][b]Looks[/b]: the body is the cart's, borrowed without asking. Underneath are curved runners with Norse curled tips, iron shoes, rope lashings and a wolf pelt on the seat (the wolf wasn't asked either). Everything uses the game's own textures, so the sled looks like it was always there.
+[*][b]Languages[/b]: all the game's languages — English, Russian, Ukrainian, Bulgarian, Macedonian, Serbian, Croatian, Polish, Czech, Slovak, German, Dutch, Swedish, Danish, Norwegian, Icelandic, Finnish, French, Italian, Spanish, Portuguese (European and Brazilian), Romanian, Hungarian, Lithuanian, Latvian, Turkish, Greek, Georgian, Hindi, Thai, Chinese (Simplified and Traditional), Japanese and Korean. The riding hint even shows your own key bindings.
+[/list]
+
+[size=4][b]Requirements[/b][/size]
+[list]
+[*][url=https://www.nexusmods.com/valheim/mods/3605]BepInExPack Valheim[/url]
+[*][url=https://www.nexusmods.com/valheim/mods/1138]Jötunn, the Valheim Library[/url]
+[*]Optional: Seasons or Seasonality (one of them, not both).
+[/list]
+Tested on Valheim 1.0.20 with BepInExPack 5.4.2351, Jötunn 2.30.2, Seasons 1.10.5 and Seasonality 3.8.4, single player and with two players.
+
+[size=4][b]Shout outs[/b][/size]
+[list]
+[*]Inspired by [url=https://thunderstore.io/c/valheim/p/ModdedWolf/ShieldSledding/]Shield Sledding[/url] (ModdedWolf), whose surface rules (ice by name, Deep North powder depth) this mod follows.
+[*][url=https://github.com/Shuiei/valheim-world-editor]Valheim World Editor[/url] built the test courses: snowy slopes, a strip of bare frozen ground, a flat pad for coasting tests, all edited live in the test world. It helped a lot: every surface could be tested under the same, repeatable conditions.
+[/list]
+This mod — code, 3D model, sounds, translations, tests and this text — was made entirely with AI ([url=https://claude.com/claude-code]Claude Code[/url]), and tested in the game.
+
+Source code (MIT): [url=https://github.com/rgeraskin/valheim-winter-sled]github.com/rgeraskin/valheim-winter-sled[/url]

@@ -1,0 +1,23 @@
+{
+  "thunderstore": {
+    "url": "https://thunderstore.io",
+    "team": "rgeraskin",
+    "community": "valheim",
+    "categories": ["mods", "vehicles", "transportation", "building", "deep-north-update"]
+  },
+  "hexium": {
+    "url": "https://valheim.hexium.gg",
+    "team": "rgeraskin",
+    "community": "valheim",
+    "categories": ["Vehicles", "Transportation", "Pieces", "Open Source", "Valheim 1.0", "Client & Server"],
+    "installLocation": "both"
+  },
+  "nexus": {
+    "url": "https://api.nexusmods.com",
+    "game": "valheim",
+    "modId": 4546,
+    "modFileId": "8212650",
+    "name": "Winter Sled {version}",
+    "description": "Winter Sled {version}: the plugin. Needs BepInExPack Valheim and Jotunn. Install on every player and on the server."
+  }
+}

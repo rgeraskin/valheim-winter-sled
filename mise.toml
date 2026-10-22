@@ -1,0 +1,78 @@
+[tools]
+blender = "5.2.2"
+dotnet = "10"
+
+[env]
+# Steam's Valheim folder (macOS default); edit for Windows/Linux installs (CI passes -p:ValheimDir instead)
+VALHEIM_DIR = "{{env.HOME}}/Library/Application Support/Steam/steamapps/common/Valheim"
+# game meshes/textures extracted locally for previews only (never committed)
+VALHEIM_EXTRACT_DIR = "{{config_root}}/.extract"
+
+[tasks.model]
+description = "Regenerate the sled undercarriage mesh"
+run = "python3 model/build_model.py"
+
+[tasks.preview]
+description = "Render model previews with the game's textures (needs `mise run extract` once)"
+depends = ["model"]
+run = """
+mkdir -p model/preview
+blender -b --factory-startup -P model/render_preview.py -- \
+  WinterSled/Resources/sled_undercarriage.obj \
+  "$VALHEIM_EXTRACT_DIR/cart_body.obj" "$VALHEIM_EXTRACT_DIR/textures" model/preview/sled
+"""
+
+[tasks.build]
+description = "Build the plugin"
+run = "dotnet build WinterSled/WinterSled.csproj -c Release"
+
+[tasks.test]
+description = "Unit tests (surface rules, hauling, recipes, seasons, translations, sound synthesis)"
+run = "dotnet test WinterSled.Tests/WinterSled.Tests.csproj -c Release"
+
+[tasks.sounds]
+description = "Write the synthesized runner sounds to dist/sounds/*.wav to listen to"
+run = "WINTERSLED_SOUNDS=$PWD/dist/sounds dotnet test WinterSled.Tests/WinterSled.Tests.csproj -c Release --filter WritesLoopsToListenTo && ls dist/sounds"
+
+[tasks.deploy]
+description = "Build and copy the plugin into the game's BepInEx/plugins"
+depends = ["build"]
+run = """
+dst="$VALHEIM_DIR/BepInEx/plugins/WinterSled"
+mkdir -p "$dst"
+cp WinterSled/bin/Release/WinterSled.dll "$dst/"
+echo "deployed to $dst"
+"""
+
+[tasks.package]
+description = "Make the Thunderstore zip in dist/"
+depends = ["build"]
+run = "tools/package.sh"
+
+[tasks.harness]
+description = "Deploy the development test driver (never shipped) next to the plugin"
+depends = ["deploy"]
+run = """
+dotnet build tools/DevHarness/DevHarness.csproj -c Release
+dst="$VALHEIM_DIR/BepInEx/plugins/WinterSledDevHarness"
+mkdir -p "$dst"
+cp tools/DevHarness/bin/Release/WinterSledDevHarness.dll "$dst/"
+"""
+
+[tasks.game]
+description = "Start Valheim with BepInEx under Rosetta; with the harness it loads a local test world"
+run = """
+mkdir -p "$PWD/.harness"
+cd "$VALHEIM_DIR"
+WINTERSLED_HARNESS_DIR="${WINTERSLED_HARNESS_DIR:-$OLDPWD/.harness}" WINTERSLED_AUTOSTART="${WINTERSLED_AUTOSTART:-1}" \
+  /usr/bin/arch -x86_64 /bin/bash ./start_game_bepinex.sh -screen-fullscreen 0 -screen-width 1280 -screen-height 720
+"""
+
+[tasks.editor-mcp]
+description = "Forward 127.0.0.1:5731 to the World Editor's MCP on the Windows test machine (behind netsh portproxy); runs until killed"
+run = """
+pkill -f 'socat TCP-LISTEN:5731' || true
+host="${WINTERSLED_REMOTE:?set WINTERSLED_REMOTE=user@host, e.g. in mise.local.toml}"; host="${host#*@}"
+nohup socat TCP-LISTEN:5731,bind=127.0.0.1,fork,reuseaddr TCP4:$host:5731,connect-timeout=5 >/tmp/valheim-editor-mcp.log 2>&1 &
+echo "forwarding 127.0.0.1:5731 -> $host:5731"
+"""
