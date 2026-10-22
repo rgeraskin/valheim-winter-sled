@@ -11,6 +11,8 @@ It rides on runners instead of wheels, so how it moves depends on what is under 
 
 That makes it the cart's winter rival: the cart wins on grass, the sled wins in snow. To keep things fair, **wheels now sink in snow** — the cart had it too easy (you can turn that off if you feel sorry for it).
 
+The vanilla cart gets a seat too, for a passenger (no steering or brakes: someone pulls, or it rolls) — fair is fair (`CartSeat` turns it off).
+
 You can also **sit in it and ride down a snowy slope**: steer with A/D, brake with your heels on S, push off with W, and jump to bail out. A parked sled stays put on a slope. A sled you let go of at full speed does not: it has places to be. Odin does not cover runaway sleds.
 
 While you pull it, an icon shows what the runners are on — snow, deep snow, ice, frozen ground, wood, stone or ground — in case your legs haven't told you already.
@@ -45,6 +47,7 @@ The body is the cart's, borrowed without asking. Underneath are curved runners w
 | 1 - General | SeasonalRequirements | `Wood:20,LeatherScraps:8,BronzeNails:10` | used with Seasons/Seasonality; empty: never |
 | 1 - General | SlowCartsInSnow | true | wheeled vehicles slow you in snow |
 | 1 - General | CartSnowPullSpeed / CartPowderPullSpeed | 0.8 / 0.6 | |
+| 1 - General | CartSeat | true | a passenger seat in the vanilla cart |
 | 2 - Sound and effects | SoundVolume / SnowSpray | 0.6 / true | per player |
 | 2 - Sound and effects | SeatAnimation | `emote_sit` | `attach_chair` sits upright |
 | 3 - Hauling | GroundPullSpeed / FrozenPullSpeed / FloorPullSpeed | 0.8 / 0.9 / 0.9 | on top of the runners' own drag |

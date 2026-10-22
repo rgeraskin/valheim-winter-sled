@@ -39,6 +39,7 @@ namespace WinterSled
         public readonly ConfigEntry<bool> SlowCartsInSnow;
         public readonly ConfigEntry<float> CartSnowPullSpeed;
         public readonly ConfigEntry<float> CartPowderPullSpeed;
+        public readonly ConfigEntry<bool> CartSeat;
 
         public readonly ConfigEntry<float> SteerStrength;
         public readonly ConfigEntry<float> BrakeFriction;
@@ -79,6 +80,7 @@ namespace WinterSled
                 "Wheeled vehicles (the vanilla cart) slow you down in snow, where the sled glides.");
             CartSnowPullSpeed = BindNumber(General, "CartSnowPullSpeed", 0.8f, "Speed multiplier while pulling a cart over snow.");
             CartPowderPullSpeed = BindNumber(General, "CartPowderPullSpeed", 0.6f, "Speed multiplier while pulling a cart through Deep North powder.");
+            CartSeat = Bind(General, "CartSeat", true, "Players can sit in the vanilla cart too, as passengers (no steering or brakes: someone pulls, or it rolls).");
 
             SoundVolume = BindNumber(Effects, "SoundVolume", 0.6f,
                 "Volume of the runners' sound (snow hiss, ice song, ground scrape) and the wind when riding.", 0f, 1f, synced: false);

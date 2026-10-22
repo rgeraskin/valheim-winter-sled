@@ -61,6 +61,11 @@ namespace WinterSled
                 ItemManager.Instance.AddStatusEffect(new CustomStatusEffect(SledHaulEffect.Create(icon), false));
                 var cart = PrefabManager.Instance.GetPrefab("Cart");
                 ItemManager.Instance.AddStatusEffect(new CustomStatusEffect(CartSnowEffect.Create(cart != null ? cart.GetComponent<Piece>().m_icon : icon), false));
+                if (cart != null && cart.TryGetComponent<Vagon>(out var cartVagon))
+                {
+                    // the cart is the sled's body on wheels: the same seat, higher by the body's drop (CartSeat turns it off)
+                    BuildSeat(cart.transform, cartVagon, DeckTop + BodyDrop);
+                }
                 Plugin.Log.LogInfo("Winter sled registered");
             }
             catch (Exception e)
@@ -120,7 +125,7 @@ namespace WinterSled
             var undercarriage = BuildUndercarriage(root, visualLayer, vagon);
             AddToLods(prefab, undercarriage);
             BuildRunnerColliders(root, vagon);
-            BuildSeat(root, vagon);
+            BuildSeat(root, vagon, DeckTop);
 
             prefab.AddComponent<SledController>();
             prefab.AddComponent<SledAudio>();
@@ -198,7 +203,7 @@ namespace WinterSled
             capsule.height = length;
         }
 
-        private static void BuildSeat(Transform root, Vagon vagon)
+        private static void BuildSeat(Transform root, Vagon vagon, float deckTop)
         {
             // the storage's hover box covered the whole bed; the back part is now the seat
             if (vagon.m_container != null)
@@ -210,7 +215,7 @@ namespace WinterSled
 
             var seat = new GameObject("sled_seat") { layer = vagon.m_container != null ? vagon.m_container.gameObject.layer : root.gameObject.layer };
             seat.transform.SetParent(root, false);
-            seat.transform.localPosition = new Vector3(0f, DeckTop + 0.33f, -0.66f);
+            seat.transform.localPosition = new Vector3(0f, deckTop + 0.33f, -0.66f);
             var box = seat.AddComponent<BoxCollider>();
             box.isTrigger = true;
             box.size = new Vector3(1.2f, 0.4f, 0.62f);
@@ -218,7 +223,7 @@ namespace WinterSled
             // where the rider's feet-level root goes: on the pelt, facing the shafts
             var attach = new GameObject("attach");
             attach.transform.SetParent(seat.transform, false);
-            attach.transform.position = root.TransformPoint(new Vector3(0f, DeckTop + 0.02f, -0.58f));
+            attach.transform.position = root.TransformPoint(new Vector3(0f, deckTop + 0.02f, -0.58f));
 
             var comp = seat.AddComponent<SledSeat>();
             comp.m_attachPoint = attach.transform;

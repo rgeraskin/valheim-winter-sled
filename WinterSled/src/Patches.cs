@@ -12,7 +12,9 @@ namespace WinterSled
 
         private static void Postfix(Vagon __instance)
         {
-            if (!__instance.TryGetComponent<SledController>(out var sled) || !sled.HasRider())
+            // sleds and carts alike: both have a seat
+            var seat = __instance.GetComponentInChildren<SledSeat>();
+            if (seat == null || !seat.HaveValidRider())
             {
                 return;
             }

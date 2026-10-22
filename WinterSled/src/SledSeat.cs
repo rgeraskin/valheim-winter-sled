@@ -3,9 +3,9 @@ using UnityEngine;
 namespace WinterSled
 {
     /// <summary>
-    /// The place to sit on the sled. It is a doodad controller like a ship's rudder, so the
-    /// rider's movement keys steer the sled instead of standing the rider up, and the seat is
-    /// claimed through the sled's owner the same way the rudder is.
+    /// The place to sit on the sled, or in the vanilla cart. It is a doodad controller like a ship's rudder, so on a
+    /// sled the rider's movement keys steer instead of standing the rider up; in a cart it is a passenger's seat (no
+    /// steering or brakes). The seat is claimed through the vehicle's owner the same way the rudder is.
     /// </summary>
     internal class SledSeat : MonoBehaviour, Interactable, Hoverable, IDoodadController
     {
@@ -16,12 +16,19 @@ namespace WinterSled
         private static readonly int s_rider = "wintersled_rider".GetStableHashCode();
 
         private ZNetView m_nview;
+        // null in a cart
         private SledController m_sled;
+        private Vagon m_vagon;
+        private Rigidbody m_body;
+
+        private bool InCart => m_sled == null;
 
         private void Start()
         {
             m_nview = GetComponentInParent<ZNetView>();
             m_sled = GetComponentInParent<SledController>();
+            m_vagon = GetComponentInParent<Vagon>();
+            m_body = GetComponentInParent<Rigidbody>();
             if (m_nview == null || !m_nview.IsValid())
             {
                 enabled = false;
@@ -46,7 +53,7 @@ namespace WinterSled
                 return false;
             }
             var player = user as Player;
-            if (player == null || player.IsEncumbered() || player.IsAttached() || !InUseDistance(player))
+            if (player == null || player.IsEncumbered() || player.IsAttached() || !InUseDistance(player) || (InCart && !Plugin.Cfg.CartSeat.Value))
             {
                 return false;
             }
@@ -61,16 +68,25 @@ namespace WinterSled
 
         public string GetHoverText()
         {
+            if (InCart && !Plugin.Cfg.CartSeat.Value)
+            {
+                return "";
+            }
             if (Player.m_localPlayer == null || !InUseDistance(Player.m_localPlayer))
             {
                 return Localization.instance.Localize("<color=#888888>$piece_toofar</color>");
             }
-            return Localization.instance.Localize("$piece_wintersled\n[<color=yellow><b>$KEY_Use</b></color>] $wintersled_ride");
+            return Localization.instance.Localize(VehicleName() + "\n[<color=yellow><b>$KEY_Use</b></color>] $wintersled_ride");
         }
 
         public string GetHoverName()
         {
-            return Localization.instance.Localize("$piece_wintersled");
+            return Localization.instance.Localize(VehicleName());
+        }
+
+        private string VehicleName()
+        {
+            return InCart && m_vagon != null ? m_vagon.m_name : "$piece_wintersled";
         }
 
         // ---------------------------------------------------------------- IDoodadController
@@ -91,6 +107,16 @@ namespace WinterSled
             }
             player.AttachStop();
             StepOff(player);
+            RefreshLoad();
+        }
+
+        // the crates under the rider hide or show at once, not at the cart's next load check (every 3 s)
+        private void RefreshLoad()
+        {
+            if (m_vagon != null)
+            {
+                m_vagon.UpdateLoadVisualization();
+            }
         }
 
         /// <summary>
@@ -105,13 +131,13 @@ namespace WinterSled
             if (player.m_body != null)
             {
                 player.m_body.position = pos;
-                player.m_body.linearVelocity = m_sled != null ? m_sled.GetComponent<Rigidbody>().GetPointVelocity(pos) : Vector3.zero;
+                player.m_body.linearVelocity = m_body != null ? m_body.GetPointVelocity(pos) : Vector3.zero;
             }
         }
 
         public Component GetControlledComponent()
         {
-            return m_sled;
+            return InCart ? m_vagon : m_sled;
         }
 
         public Vector3 GetPosition()
@@ -191,9 +217,15 @@ namespace WinterSled
                 return;
             }
             player.StartDoodadControl(this);
-            // the sled's colliders are ignored by the rider, so sitting inside it doesn't shove it around
-            player.AttachStart(m_attachPoint, m_sled.gameObject, hideWeapons: false, isBed: false, onShip: false,
+            // the vehicle's colliders are ignored by the rider, so sitting inside it doesn't shove it around
+            player.AttachStart(m_attachPoint, m_body.gameObject, hideWeapons: false, isBed: false, onShip: false,
                 Plugin.Cfg.SeatAnimation.Value, m_detachOffset);
+            RefreshLoad();
+            if (InCart)
+            {
+                // a passenger: nothing to steer; Jump stands up as from any chair
+                return;
+            }
             player.Message(MessageHud.MessageType.Center, Translations.ControlsHint);
             m_sled.OnLocalRiderSeated();
         }
