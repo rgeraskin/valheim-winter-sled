@@ -53,8 +53,8 @@ namespace WinterSled
         private readonly HashSet<Collider> m_runners = new HashSet<Collider>();
         private readonly List<Transform> m_runnerTails = new List<Transform>();
         private PhysicsMaterial m_slideMaterial;
-        private PhysicsMaterial m_brakeMaterial;
-        private bool m_braked;
+        private PhysicsMaterial m_restMaterial;
+        private bool m_resting;
 
         private struct Contact
         {
@@ -125,14 +125,14 @@ namespace WinterSled
                 frictionCombine = PhysicsMaterialCombine.Minimum,
                 bounceCombine = PhysicsMaterialCombine.Minimum,
             };
-            m_brakeMaterial = new PhysicsMaterial("sled_runner_parked")
+            m_restMaterial = new PhysicsMaterial("sled_runner_resting")
             {
                 dynamicFriction = 1f,
                 staticFriction = 1f,
                 frictionCombine = PhysicsMaterialCombine.Maximum,
                 bounceCombine = PhysicsMaterialCombine.Minimum,
             };
-            SetBrake(true);
+            SetResting(true);
             m_lastTrailPos = transform.position;
         }
 
@@ -323,17 +323,18 @@ namespace WinterSled
                 m_lastContactTime = Time.fixedTime;
             }
             bool active = IsPulled() || HasRider();
-            // the parking brake holds a sled on snow, not on ice: a sled left on ice slides when bumped (and some
-            // ice, like Seasonality's, wouldn't hold it anyway)
-            SetBrake(!active && Speed < Plugin.Cfg.ParkSpeed.Value && Surface != Surface.Ice);
+            // static friction: a sled left standing settles into the snow and stays put on a slope (the runners'
+            // own friction is the sliding kind, far lower). Not on ice, where a bumped sled slides (and some ice,
+            // like Seasonality's, has a material that would win over this one anyway).
+            SetResting(!active && Speed < Plugin.Cfg.StaticFrictionSpeed.Value && Surface != Surface.Ice);
             if (active && m_body.IsSleeping())
             {
-                // a parked sled falls asleep; a sleeping body ignores gravity and the rider's input
+                // a resting sled falls asleep; a sleeping body ignores gravity and the rider's input
                 m_body.WakeUp();
             }
             UpdateOwnerSurface();
 
-            if (!m_braked)
+            if (!m_resting)
             {
                 var controls = CurrentControls();
                 ApplyRunnerFriction(controls.z < -0.5f);
@@ -351,24 +352,24 @@ namespace WinterSled
                 float aAlong = m_debugAlong / m_body.mass / span, aAcross = m_debugAcross / m_body.mass / span;
                 m_debugAlong = m_debugAcross = 0f;
                 m_debugTime = Time.fixedTime;
-                Plugin.Log.LogInfo($"sled {m_nview.GetZDO().m_uid}: friction along={aAlong:0.000} across={aAcross:0.000} m/s2, mu={SurfaceProbe.Friction(Surface):0.000}; surface={Surface} speed={Speed:0.00} contacts={m_contacts.Count} mass={m_body.mass:0} braked={m_braked} pulled={IsPulled()} rider={HasRider()}");
+                Plugin.Log.LogInfo($"sled {m_nview.GetZDO().m_uid}: friction along={aAlong:0.000} across={aAcross:0.000} m/s2, mu={SurfaceProbe.Friction(Surface):0.000}; surface={Surface} speed={Speed:0.00} contacts={m_contacts.Count} mass={m_body.mass:0} resting={m_resting} pulled={IsPulled()} rider={HasRider()}");
             }
             m_contacts.Clear();
         }
 
-        private void SetBrake(bool braked)
+        private void SetResting(bool resting)
         {
-            if (braked == m_braked && m_runners.Count > 0)
+            if (resting == m_resting && m_runners.Count > 0)
             {
                 return;
             }
-            m_braked = braked;
-            var mat = braked ? m_brakeMaterial : m_slideMaterial;
+            m_resting = resting;
+            var mat = resting ? m_restMaterial : m_slideMaterial;
             foreach (var col in m_runners)
             {
                 col.sharedMaterial = mat;
             }
-            if (!braked)
+            if (!resting)
             {
                 m_body.WakeUp();
             }

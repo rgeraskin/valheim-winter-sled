@@ -4,7 +4,7 @@
 
 - `WinterSled/` — the plugin (BepInEx + Jötunn, net462).
   - `SledBuilder` clones the vanilla `Cart`, removes the wheels, lowers the body by 0.10 m, adds the undercarriage mesh, runner capsule colliders, the seat and `SledController`.
-  - `SledController` — runner physics on the ZDO owner: frictionless runner material plus its own Coulomb friction, separately along (surface-dependent) and across (grip) each runner; parking brake (high-friction material) when nobody pulls or rides and speed < 1.5 m/s; air drag with a soft cap at `MaxSpeed`; rider steering/brake/push; snow spray, powder trail, sound.
+  - `SledController` — runner physics on the ZDO owner: frictionless runner material plus its own Coulomb friction, separately along (surface-dependent) and across (grip) each runner; static friction (a high-friction material: the runners settle into the snow) when nobody pulls or rides, speed < `StaticFrictionSpeed` and not on ice; air drag with a soft cap at `MaxSpeed`; rider steering/brake/push; snow spray, powder trail, sound.
   - `SurfaceProbe` — what is under a runner: `ClassifyGround` (pure, unit-tested) turns biome, the season's look, terrain paint and slope into Snow / Powder (Deep North, deep) / FrozenGround (cleared ground in the cold) / Stone (paved or cliff in the cold) / Ground (warm); Ice by collider name or a solid Water-layer collider (seasonal frozen water); Wood/Stone pieces by WearNTear material (snowy pieces count as snow).
   - `SledSeat` — `IDoodadController` like a ship's rudder, so WASD steers instead of standing up.
   - `SledHaulEffect` — status effect on the puller: speed factor per surface, run stamina drain on ground, icon text shows the surface. `CartSnowDrag`/`CartSnowEffect` slow wheeled vehicles in snow.
@@ -79,9 +79,9 @@ Test course (built live with the World Editor in world SledTest, x -1628..-1604)
 | ride into the dirt strip / onto ground | ~8 → 0 m/s in ~1.5 s |
 | brake (S, BrakeFriction 0.2) | ~2.8 m/s² |
 | steering (A/D) | ~45° heading change in 2 s at 6 m/s |
-| parked on a slope, unattended | stays put; let go at speed it keeps sliding |
+| left standing on a slope, unattended | stays put; let go at speed it keeps sliding |
 
-Fixed along the way: PhysX per-point contact impulses double-counted the normal force (now weight based); a parked (sleeping) body ignored the rider; steering was too weak (torque gain 5 → 20); brake too harsh (0.45 → 0.2); the rider stayed inside the bed after jumping off (first stepped off beside the sled, which looked like sitting down beside it; now stands up on the deck, carried along with the sled, and steps or jumps off); the pelt was hidden under the uneven deck planks (raised); the build icon showed the cart's cargo crates.
+Fixed along the way: PhysX per-point contact impulses double-counted the normal force (now weight based); a resting (sleeping) body ignored the rider; steering was too weak (torque gain 5 → 20); brake too harsh (0.45 → 0.2); the rider stayed inside the bed after jumping off (first stepped off beside the sled, which looked like sitting down beside it; now stands up on the deck, carried along with the sled, and steps or jumps off); the pelt was hidden under the uneven deck planks (raised); the build icon showed the cart's cargo crates.
 
 Note: the test character takes Freezing and teleport-fall damage (harness artefacts); the harness `god` command keeps its health full. The mod itself never heals.
 

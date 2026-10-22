@@ -24,7 +24,7 @@ namespace WinterSled
         public readonly ConfigEntry<float> IceGrip;
         public readonly ConfigEntry<float> MaxSpeed;
         public readonly ConfigEntry<float> AirDrag;
-        public readonly ConfigEntry<float> ParkSpeed;
+        public readonly ConfigEntry<float> StaticFrictionSpeed;
         public readonly ConfigEntry<float> CliffAngle;
         public readonly ConfigEntry<float> PowderDepth;
         public readonly ConfigEntry<float> CrashMinSpeed;
@@ -117,7 +117,7 @@ namespace WinterSled
 
             BaseMass = BindNumber(Physics, "BaseMass", 40f, "Empty sled mass. Cargo adds 10% of its weight, like the cart.", 10f, 200f);
             AirDrag = BindNumber(Physics, "AirDrag", 0.55f, "Air drag (N per (m/s)²) of a sled with a rider: what tops out a downhill run before MaxSpeed.", 0f, 5f);
-            ParkSpeed = BindNumber(Physics, "ParkSpeed", 1.5f, "Below this speed (m/s) a sled nobody pulls or rides sets its brake and stays put on a slope.", 0f, 10f);
+            StaticFrictionSpeed = BindNumber(Physics, "StaticFrictionSpeed", 1.5f, "Below this speed (m/s) a sled nobody pulls or rides is held by the runners' static friction (they settle into the snow), so it stays put on a slope; not on ice.", 0f, 10f);
             SteerResponse = BindNumber(Physics, "SteerResponse", 20f, "How quickly the sled answers A/D (turn rate gain); the runners' grip fights it.", 1f, 60f);
             CliffAngle = BindNumber(Physics, "CliffAngle", 52f, "Slopes steeper than this (degrees) in the cold biomes are bare rock, not snow.", 20f, 89f);
             PowderDepth = BindNumber(Physics, "PowderDepth", 0.3f, "Deep North snow deeper than this (m) is powder.", 0f, 2f);

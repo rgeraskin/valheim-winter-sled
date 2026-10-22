@@ -13,7 +13,7 @@ That makes it the cart's winter rival: the cart wins on grass, the sled wins in 
 
 The vanilla cart gets a seat too, for a passenger (no steering or brakes: someone pulls, or it rolls) — fair is fair (`CartSeat` turns it off).
 
-You can also **sit in it and ride down a snowy slope**: steer with A/D, brake with your heels on S, push off with W, and jump to bail out. A parked sled stays put on a slope. A sled you let go of at full speed does not: it has places to be. Odin does not cover runaway sleds.
+You can also **sit in it and ride down a snowy slope**: steer with A/D, brake with your heels on S, push off with W, and jump to bail out. A sled left standing stays put on a slope: its runners settle into the snow. A sled you let go of at full speed does not: it has places to be. Odin does not cover runaway sleds.
 
 While you pull it, an icon shows what the runners are on — snow, deep snow, ice, frozen ground, wood, stone or ground — in case your legs haven't told you already.
 
@@ -61,7 +61,7 @@ The body is the cart's, borrowed without asking. Underneath are curved runners w
 | 5 - Advanced: runner friction | FrozenGroundFriction / WoodFriction / StoneFriction / GroundFriction | 0.25 / 0.22 / 0.35 / 0.55 | |
 | 5 - Advanced: runner friction | RunnerGrip / IceGrip | 0.6 / 0.15 | across the runners |
 | 6 - Advanced: physics | BaseMass | 40 | cargo adds 10% of its weight |
-| 6 - Advanced: physics | AirDrag / ParkSpeed / SteerResponse | 0.55 / 1.5 m/s / 20 | below ParkSpeed a sled nobody pulls or rides brakes itself |
+| 6 - Advanced: physics | AirDrag / StaticFrictionSpeed / SteerResponse | 0.55 / 1.5 m/s / 20 | below StaticFrictionSpeed a sled nobody pulls or rides is held by static friction (not on ice) |
 | 6 - Advanced: physics | CliffAngle / PowderDepth | 52° / 0.3 m | steeper cold ground is stone; Deep North snow deeper than this is powder |
 | 6 - Advanced: physics | DebugLog | false | |
 
