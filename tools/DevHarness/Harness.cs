@@ -324,6 +324,11 @@ namespace WinterSledDevHarness
                         _ => Vector3.zero,
                     };
                     m_run = a.Length > 2 && a[2] == "run";
+                    if (m_move == Vector3.zero)
+                    {
+                        // move stop: hand the keyboard and mouse back to whoever is playing
+                        Drive(false);
+                    }
                     break;
                 case "input":
                     Drive(true);
