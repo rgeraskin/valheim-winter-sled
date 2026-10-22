@@ -351,6 +351,17 @@ namespace WinterSledDevHarness
                 case "faceslope":
                     FaceSlope(a.Length > 1 && a[1] == "up");
                     break;
+                case "body":
+                    {
+                        // body [interp|none]: the sled's rigidbody interpolation (and switch it, to compare)
+                        var rb = m_sled.GetComponent<Rigidbody>();
+                        if (a.Length > 1)
+                        {
+                            rb.interpolation = a[1] == "interp" ? RigidbodyInterpolation.Interpolate : RigidbodyInterpolation.None;
+                        }
+                        Log($"body interpolation={rb.interpolation} fixedDt={Time.fixedDeltaTime:0.000} fps={1f / Time.smoothDeltaTime:0} owner={m_sled.GetComponent<ZNetView>().IsOwner()}");
+                    }
+                    break;
                 case "loadvis":
                     // where the cargo crates sit in the bed, in the sled's own space
                     foreach (var lv in m_sled.GetComponent<Vagon>().m_loadVis)
@@ -380,6 +391,9 @@ namespace WinterSledDevHarness
                         LogState("rec");
                         yield return new WaitForSeconds(step);
                     }
+                    break;
+                case "burst":
+                    yield return Burst(a);
                     break;
                 case "shot":
                     yield return Shot(a);
@@ -419,8 +433,13 @@ namespace WinterSledDevHarness
                 case "materials":
                     foreach (var r in m_sled.GetComponentsInChildren<Renderer>())
                     {
-                        Log($"{r.name}: {string.Join(", ", r.sharedMaterials.Select(m => m ? $"{m.name}({m.shader.name})" : "null"))} enabled={r.enabled} visible={r.isVisible}");
+                        Log($"{r.name} [{r.GetType().Name}, motion vectors {r.motionVectorGenerationMode}, parent {r.transform.parent?.name}]: {string.Join(", ", r.sharedMaterials.Select(m => m ? $"{m.name}({m.shader.name})" : "null"))} enabled={r.enabled} visible={r.isVisible}");
                     }
+                    foreach (var lod in m_sled.GetComponentsInChildren<LODGroup>())
+                    {
+                        Log($"LODGroup {lod.name} fade={lod.fadeMode} crossfade={lod.animateCrossFading}: " + string.Join(" | ", lod.GetLODs().Select((l, i) => $"LOD{i}@{l.screenRelativeTransitionHeight:0.00}: " + string.Join(",", l.renderers.Where(x => x).Select(x => x.name)))));
+                    }
+                    Log($"camera: {Camera.main?.name} depthTextureMode={Camera.main?.depthTextureMode} allowMSAA={Camera.main?.allowMSAA}");
                     break;
                 case "icon":
                     {
@@ -774,9 +793,59 @@ namespace WinterSledDevHarness
                 var body = m_sled.GetComponent<Rigidbody>();
                 var v = body.linearVelocity;
                 float along = Vector3.Dot(v, m_sled.transform.forward);
-                sb.Append($"sled pos={m_sled.transform.position.ToString("F1")} speed={v.magnitude:0.00} along={along:0.00} side={Vector3.Dot(v, m_sled.transform.right):0.00} up.y={m_sled.transform.up.y:0.00} surface={(sled ? sled.Surface.ToString() : "-")} pulled={vagon.IsAttached()} rider={(sled ? sled.HasRider() : false)} mass={body.mass:0} hp={m_sled.GetComponent<ZNetView>().GetZDO().GetFloat(ZDOVars.s_health, -1f):0} owner={m_sled.GetComponent<ZNetView>().IsOwner()}");
+                sb.Append($"sled pos={m_sled.transform.position.ToString("F1")} speed={v.magnitude:0.00} along={along:0.00} side={Vector3.Dot(v, m_sled.transform.right):0.00} up.y={m_sled.transform.up.y:0.00} surface={(sled ? sled.Surface.ToString() : "-")} pulled={vagon.IsAttached()} rider={(sled ? sled.HasRider() : false)} mass={body.mass:0} hp={m_sled.GetComponent<ZNetView>().GetZDO().GetFloat(ZDOVars.s_health, -1f):0} yaw={m_sled.transform.eulerAngles.y:0.00} pitch={Mathf.DeltaAngle(0f, m_sled.transform.eulerAngles.x):0.00} roll={Mathf.DeltaAngle(0f, m_sled.transform.eulerAngles.z):0.00} w=({body.angularVelocity.x:0.000},{body.angularVelocity.y:0.000},{body.angularVelocity.z:0.000}) owner={m_sled.GetComponent<ZNetView>().IsOwner()}");
             }
             Log(sb.ToString());
+        }
+
+        // burst <name> <frames> [yaw] [pitch] [dist] [height]: consecutive frames, the camera locked to the sled;
+        // burst <name> <frames> game [interval]: the game's own camera, as the player sees it, every interval seconds
+        private IEnumerator Burst(string[] a)
+        {
+            string name = a[1];
+            int frames = a.Length > 2 ? int.Parse(a[2]) : 10;
+            if (a.Length > 3 && a[3] == "game")
+            {
+                float interval = a.Length > 4 ? F(a[4]) : 0f;
+                for (int i = 0; i < frames; i++)
+                {
+                    if (interval > 0f && i > 0)
+                    {
+                        yield return new WaitForSeconds(interval);
+                    }
+                    yield return new WaitForEndOfFrame();
+                    LogState($"frame{i:00}");
+                    var shot = ScreenCapture.CaptureScreenshotAsTexture();
+                    File.WriteAllBytes(Path.Combine(m_dir, "shots", $"{name}_{i:00}.png"), shot.EncodeToPNG());
+                    Destroy(shot);
+                    yield return null;
+                }
+                Log($"burst {name} x{frames} (game camera)");
+                yield break;
+            }
+            float yaw = a.Length > 3 ? F(a[3]) : 90f;
+            float pitch = a.Length > 4 ? F(a[4]) : 15f;
+            float dist = a.Length > 5 ? F(a[5]) : 3f;
+            float height = a.Length > 6 ? F(a[6]) : 0.3f;
+            var gc = GameCamera.instance;
+            var cam = gc.m_camera;
+            gc.enabled = false;
+            for (int i = 0; i < frames; i++)
+            {
+                // place the camera in this frame's update, after the sled moved, so the sled stands still in the shots
+                yield return null;
+                var focus = m_sled.transform;
+                var center = focus.position + Vector3.up * height;
+                var dir = Quaternion.Euler(pitch, focus.eulerAngles.y + 180f + yaw, 0f) * Vector3.forward;
+                cam.transform.position = center - dir * dist;
+                cam.transform.rotation = Quaternion.LookRotation(dir);
+                yield return new WaitForEndOfFrame();
+                var tex = ScreenCapture.CaptureScreenshotAsTexture();
+                File.WriteAllBytes(Path.Combine(m_dir, "shots", $"{name}_{i:00}.png"), tex.EncodeToPNG());
+                Destroy(tex);
+            }
+            gc.enabled = true;
+            Log($"burst {name} x{frames}");
         }
 
         private IEnumerator Shot(string[] a)
