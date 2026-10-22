@@ -16,9 +16,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v5
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
 
@@ -29,7 +29,7 @@ jobs:
 
       - name: Cache the game's assemblies, BepInEx and Jötunn
         id: deps
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ runner.temp }}/valheim
           key: deps-${{ steps.week.outputs.week }}-${{ hashFiles('tools/ci/versions.env', 'tools/ci/fetch-deps.sh') }}
@@ -54,7 +54,7 @@ jobs:
       - name: Package
         run: tools/package.sh
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: package
           path: dist/WinterSled-*.zip
