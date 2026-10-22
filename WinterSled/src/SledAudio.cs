@@ -62,7 +62,7 @@ namespace WinterSled
             float speed = m_sled.Speed;
             float master = Plugin.Cfg.SoundVolume.Value;
             float t = Mathf.Clamp01(speed / 8f);
-            var surface = m_sled.Surface;
+            var surface = m_sled.ShownSurface;
             bool touching = m_sled.Touching;
 
             Loop? active = null;
@@ -92,8 +92,8 @@ namespace WinterSled
                 float pitch = 1f;
                 if (pair.Key == Loop.Wind)
                 {
-                    // only rushing air at riding speeds
-                    target = Mathf.Clamp01((speed - 6f) / 10f) * 0.5f;
+                    // rushing air for a rider going fast, not for someone running with the sled in tow
+                    target = m_sled.HasRider() ? Mathf.Clamp01((speed - 6f) / 10f) * 0.5f : 0f;
                     pitch = Mathf.Lerp(0.8f, 1.3f, Mathf.Clamp01(speed / 18f));
                 }
                 else if (touching && active == pair.Key && speed > 0.15f)

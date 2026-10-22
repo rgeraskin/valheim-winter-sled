@@ -32,6 +32,10 @@ namespace WinterSled
 
         public Surface Surface { get; private set; } = Surface.Ground;
 
+        /// <summary>The surface as the player is told about it: steady where <see cref="Surface"/> flickers.</summary>
+        public Surface ShownSurface => m_shownSurface.Shown;
+        private readonly SurfaceHold m_shownSurface = new SurfaceHold();
+
         /// <summary>The runners touch something (for sound): contacts on the owner, a probe elsewhere.</summary>
         public bool Touching => m_nview != null && m_nview.IsValid() && m_nview.IsOwner() ? OnSolidGround : m_probeHit;
         private bool m_probeHit;
@@ -432,6 +436,7 @@ namespace WinterSled
 
         private void Update()
         {
+            m_shownSurface.Update(Surface, Time.time);
             if (!m_nview.IsValid())
             {
                 return;

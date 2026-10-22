@@ -41,14 +41,14 @@ namespace WinterSled
         private static Surface CurrentSurface()
         {
             var sled = SledController.LocalPulled;
-            return sled != null ? sled.Surface : Surface.Snow;
+            return sled != null ? sled.ShownSurface : Surface.Snow;
         }
 
         /// <summary>Speed multiplier for the puller on the current surface, with cargo.</summary>
         public static float SpeedFactor()
         {
             var sled = SledController.LocalPulled;
-            return sled != null ? SpeedFactorFor(sled.Surface, sled.CargoWeight()) : 1f;
+            return sled != null ? SpeedFactorFor(sled.ShownSurface, sled.CargoWeight()) : 1f;
         }
 
         public static float SpeedFactorFor(Surface surface, float cargoWeight)
