@@ -17,6 +17,7 @@
     "game": "valheim",
     "modId": 4546,
     "modFileId": "8212650",
+    "pageDescription": "package/nexus-description.bbcode",
     "name": "Winter Sled {version}",
     "description": "Winter Sled {version}: the plugin. Needs BepInExPack Valheim and Jotunn. Install on every player and on the server."
   }

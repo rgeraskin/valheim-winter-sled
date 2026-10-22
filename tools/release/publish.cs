@@ -339,10 +339,24 @@ static async Task PublishNexus(HttpClient http, JsonNode site, Release release, 
     var user = await Call(http, Name, Get($"{url}/v1/users/validate.json", auth));
     Console.WriteLine($"{Name}: the key is {user?["name"]}'s.");
     string modUid = (string)(await V3(http, Get($"{url}/v3/games/{game}/mods/{modId}", auth)))!["id"]!;
+    // the mod page: the BBCode description kept in the repository and the manifest's one-line description
+    string? pageFile = (string?)site["pageDescription"];
+    string? page = pageFile is not null ? File.ReadAllText(pageFile) : null;
+    string summary = (string)JsonNode.Parse(release.Manifest)!["description"]!;
+    if (page is not null)
+    {
+        Console.WriteLine($"{Name}: the mod page gets {pageFile} ({page.Length} characters) and the summary \"{summary}\".");
+    }
+
     if (await HasVersion(http, url, auth, modFile, release.Version))
     {
         // uploaded by hand (the first release) or by an earlier run that stopped part way
         Console.WriteLine($"{Name}: file {modFile} has version {release.Version} already: skipped.");
+        if (!dryRun)
+        {
+            await UpdateNexusPage(http, url, auth, modUid, page, summary);
+        }
+
         return;
     }
 
@@ -375,7 +389,20 @@ static async Task PublishNexus(HttpClient http, JsonNode site, Release release, 
         Console.WriteLine($"{Name}: changelog added.");
     }
 
+    await UpdateNexusPage(http, url, auth, modUid, page, summary);
     Console.WriteLine($"{Name}: https://www.nexusmods.com/{game}/mods/{modId}?tab=files");
+}
+
+// The mod page's description (BBCode) and summary, as the page editor would save them.
+static async Task UpdateNexusPage(HttpClient http, string url, (string, string)[] auth, string modUid, string? page, string summary)
+{
+    if (page is null)
+    {
+        return;
+    }
+
+    await V3(http, Request(HttpMethod.Patch, $"{url}/v3/mods/{modUid}", new JsonObject { ["description"] = page, ["summary"] = summary }, auth));
+    Console.WriteLine("Nexus Mods: the mod page's description and summary updated.");
 }
 
 // Whether a Nexus file has this version already (not removed or archived).

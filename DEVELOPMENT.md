@@ -18,7 +18,7 @@
 - `tools/DevHarness/` — dev-only plugin, never shipped: creates a local test character/world and runs commands from `$WINTERSLED_HARNESS_DIR/cmd.txt`.
 - `package/icon.png` (256 px, Thunderstore) and `package/logo.png` (1024 px, Nexus Mods/Hexium): the in-game screenshot of the sled pulled across Seasonality's frozen sea, hover text inpainted out, title in Cinzel (OFL).
 - `package/nexus-header.jpg` (1920×480) and `package/gallery/*.jpg`: the Nexus Mods header and screenshots, shot with the harness (`hud off`, `equip`, `shot`).
-- `package/nexus-description.bbcode` — the Nexus Mods page description (BBCode, in Nexus' sections); keep it in step with README.md.
+- `package/nexus-description.bbcode` — the Nexus Mods page description (BBCode, in Nexus' sections); keep it in step with README.md. Each release sends it to the mod page (with the manifest's description as the summary).
 - `tools/package.sh` — the Thunderstore zip `dist/WinterSled-<version>.zip` (`mise run package`); checks that `package/manifest.json` and `Plugin.Version` agree.
 - `tools/ci/` — `fetch-deps.sh` puts together what CI compiles against (the dedicated server's Managed assemblies via anonymous steamcmd, BepInExPack and Jötunn from Thunderstore); versions in `versions.env`.
 - `tools/release/` — `publish.cs` (adapted from Valheim World Editor's, MIT) publishes to Thunderstore, Hexium and Nexus Mods; settings in `sites.json`.
