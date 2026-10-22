@@ -6,7 +6,10 @@ namespace WinterSled
     [HarmonyPatch(typeof(Vagon), nameof(Vagon.UpdateLoadVisualization))]
     internal static class HideLoadUnderRider
     {
-        // the cargo crates fill the bed where the rider sits; with a rider aboard they'd poke through them
+        // The rider sits at the back with the legs forward, over the crates in the back and middle of the bed: those
+        // would poke through, so they hide while someone rides. The ones in the front stay, so the load still shows.
+        private const float FrontOfRider = 0.3f;
+
         private static void Postfix(Vagon __instance)
         {
             if (!__instance.TryGetComponent<SledController>(out var sled) || !sled.HasRider())
@@ -15,7 +18,10 @@ namespace WinterSled
             }
             foreach (var load in __instance.m_loadVis)
             {
-                load.m_gameobject.SetActive(false);
+                if (__instance.transform.InverseTransformPoint(load.m_gameobject.transform.position).z < FrontOfRider)
+                {
+                    load.m_gameobject.SetActive(false);
+                }
             }
         }
     }

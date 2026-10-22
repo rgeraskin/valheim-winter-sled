@@ -62,7 +62,7 @@ WINTERSLED_REMOTE = "user@windows-pc.local"
 
 Scripts in `tools/harness/`: `remote-ps.sh` (PowerShell over SSH, script on stdin), `remote-cmd.sh` (send harness commands, wait for `done`), `remote-redeploy.sh [Key=value...]` (copy DLLs, set config keys, restart, wait for the world).
 
-Harness commands: `waitplayer`, `god [time]`, `hud on|off` (also hides messages and name plates), `tp x z [yaw]`, `findbiome <Biome> [radius] [minSlope] [maxSlope]`, `tpwater x z [yaw]` (over water, onto whatever is there), `equip <item...>` (dress the test character), `clear <r>`, `look <yaw>`, `faceslope up|down`, `spawn [dist] [prefab]`, `sledpos <behind>`, `attach`, `detach`, `sit`, `move fwd|back|left|right|fl|fr|stop [run]`, `input x z`, `jump`, `release`, `load <item> <n>`, `state`, `record <sec> [step]`, `shot <name> [sled|player|game] [yaw] [pitch] [dist] [height]`, `anims`, `materials`, `quit`.
+Harness commands: `waitplayer`, `god [time]`, `hud on|off` (also hides messages and name plates), `tp x z [yaw]`, `findbiome <Biome> [radius] [minSlope] [maxSlope]`, `tpwater x z [yaw]` (over water, onto whatever is there), `equip <item...>` (dress the test character), `loadvis` (where the cargo crates sit), `god off` (mortal again: real stamina and damage), `clear <r>`, `look <yaw>`, `faceslope up|down`, `spawn [dist] [prefab]`, `sledpos <behind>`, `attach`, `detach`, `sit`, `move fwd|back|left|right|fl|fr|stop [run]`, `input x z`, `jump`, `release`, `load <item> <n>`, `state`, `record <sec> [step]`, `shot <name> [sled|player|game] [yaw] [pitch] [dist] [height]`, `anims`, `materials`, `quit`.
 
 ## Measured (Valheim 1.0.15, Windows)
 

@@ -266,6 +266,11 @@ namespace WinterSledDevHarness
                     }
                     Log("player ready at " + Player.m_localPlayer.transform.position);
                     break;
+                case "god" when a.Length > 1 && a[1] == "off":
+                    // a real character again (stamina, damage), keeping the clear weather and peaceful mobs
+                    player.SetGodMode(false);
+                    player.SetGhostMode(false);
+                    break;
                 case "god":
                     player.SetGodMode(true);
                     player.SetGhostMode(true);
@@ -340,6 +345,19 @@ namespace WinterSledDevHarness
                     break;
                 case "faceslope":
                     FaceSlope(a.Length > 1 && a[1] == "up");
+                    break;
+                case "loadvis":
+                    // where the cargo crates sit in the bed, in the sled's own space
+                    foreach (var lv in m_sled.GetComponent<Vagon>().m_loadVis)
+                    {
+                        var go = lv.m_gameobject;
+                        var r = go.GetComponentsInChildren<Renderer>(true);
+                        var b = r.Length > 0 ? r[0].bounds : new Bounds(go.transform.position, Vector3.zero);
+                        foreach (var x in r) b.Encapsulate(x.bounds);
+                        Log($"loadvis {go.name} min%={lv.m_minPercentage} active={go.activeSelf} local={m_sled.transform.InverseTransformPoint(b.center).ToString("F2")} size={b.size.ToString("F2")}");
+                    }
+                    var seatTf = m_sled.GetComponentInChildren<SledSeat>().transform;
+                    Log($"seat local={m_sled.transform.InverseTransformPoint(seatTf.position).ToString("F2")}");
                     break;
                 case "load":
                     var inv = m_sled.GetComponent<Vagon>().m_container.GetInventory();
