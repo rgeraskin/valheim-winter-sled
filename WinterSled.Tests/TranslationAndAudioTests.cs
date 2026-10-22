@@ -83,10 +83,10 @@ namespace WinterSled.Tests
         [InlineData("Ground")]
         [InlineData("Frozen")]
         [InlineData("Wind")]
-        public void LoopsAreTwoSecondsNormalisedAndSeamless(string loop)
+        public void LoopsAreNormalisedAndSeamless(string loop)
         {
             var data = Loop((SledAudio.Loop)Enum.Parse(typeof(SledAudio.Loop), loop));
-            Assert.Equal(22050 * 2, data.Length);
+            Assert.Equal((int)(SledAudio.Rate * SledAudio.LoopSeconds), data.Length);
             Assert.Equal(0.8f, data.Max(Math.Abs), 3);
             // the jump from the last sample back to the first is no bigger than the loop's own steps
             float biggestStep = 0f;

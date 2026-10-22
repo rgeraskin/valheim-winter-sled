@@ -12,8 +12,11 @@ namespace WinterSled
     /// </summary>
     internal class SledAudio : MonoBehaviour
     {
-        private const int Rate = 22050;
-        private const float LoopSeconds = 2f;
+        internal const int Rate = 22050;
+        // long enough that the loop doesn't make a rhythm of its own
+        internal const float LoopSeconds = 5f;
+        // the sled's speed rises and falls with every step of whoever pulls it: the sound follows it smoothed
+        private const float SpeedSmoothing = 0.4f;
 
         internal enum Loop { Snow, Ice, Ground, Frozen, Wind }
 
@@ -22,6 +25,7 @@ namespace WinterSled
 
         private readonly Dictionary<Loop, AudioSource> m_sources = new Dictionary<Loop, AudioSource>();
         private SledController m_sled;
+        private float m_speed;
 
         private void Start()
         {
@@ -59,7 +63,8 @@ namespace WinterSled
             {
                 return;
             }
-            float speed = m_sled.Speed;
+            m_speed += (m_sled.Speed - m_speed) * (1f - Mathf.Exp(-Time.deltaTime / SpeedSmoothing));
+            float speed = m_speed;
             float master = Plugin.Cfg.SoundVolume.Value;
             float t = Mathf.Clamp01(speed / 8f);
             var surface = m_sled.ShownSurface;
@@ -99,7 +104,8 @@ namespace WinterSled
                 else if (touching && active == pair.Key && speed > 0.15f)
                 {
                     target = Mathf.Lerp(0.15f, 1f, t) * Mathf.Clamp01(speed / 0.8f);
-                    pitch = Mathf.Lerp(0.85f, 1.25f, t);
+                    // ice only a little higher with speed: its hiss turns shrill quickly
+                    pitch = surface == Surface.Ice ? Mathf.Lerp(0.95f, 1.08f, t) : Mathf.Lerp(0.85f, 1.25f, t);
                     if (surface == Surface.Powder)
                     {
                         // ploughing powder is duller and louder
@@ -154,10 +160,10 @@ namespace WinterSled
         internal static float[] Synthesize(Loop loop)
         {
             int n = (int)(Rate * LoopSeconds);
-            int fade = Rate / 5;
+            int fade = Rate / 2;
             var rng = new System.Random(1000 + (int)loop);
             var raw = new float[n + fade];
-            float lp1 = 0f, lp2 = 0f, hpPrev = 0f, hpOut = 0f, crackle = 0f, phase = 0f, wobble = 0f;
+            float lp1 = 0f, lp2 = 0f, lp3 = 0f, lp4 = 0f, crackle = 0f, wobble = 0f;
             for (int i = 0; i < raw.Length; i++)
             {
                 float white = (float)(rng.NextDouble() * 2.0 - 1.0);
@@ -175,12 +181,20 @@ namespace WinterSled
                         sample = lp1 * 0.55f + white * crackle * 0.6f;
                         break;
                     case Loop.Ice:
-                        // thin high hiss (high-passed noise) and a faint singing tone of steel on ice
-                        hpOut = 0.97f * (hpOut + white - hpPrev);
-                        hpPrev = white;
-                        wobble += 0.00004f;
-                        phase += 2f * Mathf.PI * (1450f + 40f * Mathf.Sin(wobble * 6f)) / Rate;
-                        sample = hpOut * 0.35f + Mathf.Sin(phase) * 0.06f;
+                        // iron scraping ice: a hard band of hiss with a grit of tiny ticks (ice crystals under the
+                        // iron), over a rasp — a lower band, slightly overdriven — that gives it the scrape; no tone
+                        // and not the harshest highs (those whistled), no sparse bursts (those stuttered)
+                        lp1 += (white - lp1) * 0.6f;
+                        lp2 += (lp1 - lp2) * 0.06f;
+                        if (rng.NextDouble() < 0.035)
+                        {
+                            crackle = (float)(rng.NextDouble() * 0.5 + 0.5);
+                        }
+                        crackle *= 0.65f;
+                        lp3 += (white - lp3) * 0.12f;
+                        lp4 += (lp3 - lp4) * 0.02f;
+                        float rasp = (float)Math.Tanh((lp3 - lp4) * 10f) * 0.6f;
+                        sample = (lp1 - lp2) + lp1 * crackle * 1.7f + rasp;
                         break;
                     case Loop.Ground:
                     case Loop.Frozen:
@@ -208,9 +222,10 @@ namespace WinterSled
             Array.Copy(raw, data, n);
             for (int i = 0; i < fade; i++)
             {
-                // the extra tail fades into the head: the loop point is seamless
+                // the extra tail fades into the head: the loop point is seamless, and equal-power, so the level
+                // doesn't dip mid-fade (two unrelated noises added linearly lose a third of it)
                 float w = (float)i / fade;
-                data[i] = raw[n + i] * (1f - w) + raw[i] * w;
+                data[i] = raw[n + i] * Mathf.Cos(w * Mathf.PI / 2f) + raw[i] * Mathf.Sin(w * Mathf.PI / 2f);
             }
             float peak = 1e-4f;
             foreach (var s in data)
