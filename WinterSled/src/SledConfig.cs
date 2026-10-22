@@ -43,7 +43,8 @@ namespace WinterSled
 
         public readonly ConfigEntry<float> SteerStrength;
         public readonly ConfigEntry<float> BrakeFriction;
-        public readonly ConfigEntry<float> PushForce;
+        public readonly ConfigEntry<float> PushImpulse;
+        public readonly ConfigEntry<float> PushStamina;
         public readonly ConfigEntry<float> PushMaxSpeed;
         public readonly ConfigEntry<float> SteerResponse;
 
@@ -98,7 +99,8 @@ namespace WinterSled
             MaxSpeed = BindNumber(Riding, "MaxSpeed", 16f, "Speed (m/s) above which air drag grows steeply.", 4f, 40f);
             SteerStrength = BindNumber(Riding, "SteerStrength", 1f, "How hard A/D turn the sled when you ride it downhill.", 0f, 4f);
             BrakeFriction = BindNumber(Riding, "BrakeFriction", 0.2f, "Extra runner friction while you hold S to brake.");
-            PushForce = BindNumber(Riding, "PushForce", 2.5f, "Acceleration (m/s²) when you push off with W at low speed.", 0f, 10f);
+            PushImpulse = BindNumber(Riding, "PushImpulse", 1f, "Speed (m/s) one push-off with W adds, at low speed: one push per press, like a kick.", 0f, 3f);
+            PushStamina = BindNumber(Riding, "PushStamina", 6f, "Stamina one push-off costs.", 0f, 30f);
             PushMaxSpeed = BindNumber(Riding, "PushMaxSpeed", 3f, "Pushing off with W works below this speed (m/s).", 0f, 15f);
             CrashMinSpeed = BindNumber(Riding, "CrashMinSpeed", 6f, "Impact speed (m/s) from which hitting something damages the sled and what it hits.", 1f, 40f);
             CrashMaxSpeed = BindNumber(Riding, "CrashMaxSpeed", 14f, "Impact speed (m/s) of full crash damage.", 1f, 60f);

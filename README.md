@@ -55,7 +55,7 @@ The body is the cart's, borrowed without asking. Underneath are curved runners w
 | 3 - Hauling | GroundStaminaDrain | 1.5 | run stamina multiplier on bare ground |
 | 4 - Riding | MaxSpeed | 16 m/s | air drag grows steeply above it |
 | 4 - Riding | SteerStrength / BrakeFriction | 1 / 0.2 | |
-| 4 - Riding | PushForce / PushMaxSpeed | 2.5 / 3 m/s | |
+| 4 - Riding | PushImpulse / PushStamina / PushMaxSpeed | 1 m/s / 6 / 3 m/s | one push per press of W |
 | 4 - Riding | CrashMinSpeed / CrashMaxSpeed | 6 / 14 m/s | impact damage from / in full |
 | 5 - Advanced: runner friction | SnowFriction / PowderFriction / IceFriction | 0.06 / 0.15 / 0.012 | along the runners |
 | 5 - Advanced: runner friction | FrozenGroundFriction / WoodFriction / StoneFriction / GroundFriction | 0.25 / 0.22 / 0.35 / 0.55 | |

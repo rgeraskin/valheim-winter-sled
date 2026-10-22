@@ -72,6 +72,9 @@ namespace WinterSled
         private long m_lastOwner;
         private float m_controlsTime;
         private Vector3 m_sentControls;
+        private bool m_pushHeld;
+        private float m_nextPush;
+        private const float PushInterval = 0.35f;
         private float m_sentTime;
 
         private float m_probeTimer;
@@ -138,6 +141,7 @@ namespace WinterSled
             if (m_nview != null && m_nview.IsValid())
             {
                 m_nview.Register<Vector3>("WinterSled_Controls", RPC_Controls);
+                m_nview.Register("WinterSled_Push", RPC_Push);
             }
         }
 
@@ -181,6 +185,13 @@ namespace WinterSled
         {
             m_controls = moveDir;
             m_controlsTime = Time.time;
+            // one push-off per press of W, paid in stamina; holding it doesn't drive the sled
+            bool forward = moveDir.z > 0.5f;
+            if (forward && !m_pushHeld && Time.time >= m_nextPush)
+            {
+                TryPush();
+            }
+            m_pushHeld = forward;
             if (m_nview.IsOwner())
             {
                 return;
@@ -192,6 +203,51 @@ namespace WinterSled
                 m_sentTime = Time.time;
                 m_nview.InvokeRPC("WinterSled_Controls", moveDir);
             }
+        }
+
+        private void TryPush()
+        {
+            var player = Player.m_localPlayer;
+            // a push needs something slippery under the runners and some breath
+            if (player == null || IsPulled() || !SurfaceProbe.IsSnowy(ShownSurface))
+            {
+                return;
+            }
+            float cost = Plugin.Cfg.PushStamina.Value;
+            if (!player.HaveStamina(cost))
+            {
+                Hud.instance?.StaminaBarEmptyFlash();
+                return;
+            }
+            player.UseStamina(cost);
+            m_nextPush = Time.time + PushInterval;
+            if (m_nview.IsOwner())
+            {
+                Push();
+            }
+            else
+            {
+                m_nview.InvokeRPC("WinterSled_Push");
+            }
+        }
+
+        private void RPC_Push(long sender)
+        {
+            if (m_nview.IsOwner())
+            {
+                Push();
+            }
+        }
+
+        private void Push()
+        {
+            var forward = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
+            if (Vector3.Dot(m_body.linearVelocity, forward) >= Plugin.Cfg.PushMaxSpeed.Value)
+            {
+                return;
+            }
+            m_body.WakeUp();
+            m_body.AddForce(forward * Plugin.Cfg.PushImpulse.Value, ForceMode.VelocityChange);
         }
 
         private void RPC_Controls(long sender, Vector3 moveDir)
@@ -267,7 +323,9 @@ namespace WinterSled
                 m_lastContactTime = Time.fixedTime;
             }
             bool active = IsPulled() || HasRider();
-            SetBrake(!active && Speed < Plugin.Cfg.ParkSpeed.Value);
+            // the parking brake holds a sled on snow, not on ice: a sled left on ice slides when bumped (and some
+            // ice, like Seasonality's, wouldn't hold it anyway)
+            SetBrake(!active && Speed < Plugin.Cfg.ParkSpeed.Value && Surface != Surface.Ice);
             if (active && m_body.IsSleeping())
             {
                 // a parked sled falls asleep; a sleeping body ignores gravity and the rider's input
@@ -423,12 +481,6 @@ namespace WinterSled
                 float current = Vector3.Dot(m_body.angularVelocity, up);
                 // the runners' grip fights any turn, so the lean has to push hard
                 m_body.AddTorque(up * (target - current) * Plugin.Cfg.SteerResponse.Value, ForceMode.Acceleration);
-            }
-            // pushing off with the feet only works when slow and on something slippery
-            if (controls.z > 0.5f && speed < Plugin.Cfg.PushMaxSpeed.Value && SurfaceProbe.IsSnowy(Surface))
-            {
-                var forward = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
-                m_body.AddForce(forward * Plugin.Cfg.PushForce.Value, ForceMode.Acceleration);
             }
         }
 
