@@ -13,7 +13,7 @@ That makes it the cart's winter rival: the cart wins on grass, the sled wins in 
 
 The vanilla cart gets a seat too, for a passenger (no steering or brakes: someone pulls, or it rolls) — fair is fair (`CartSeat` turns it off).
 
-You can also **sit in it and ride down a snowy slope**: steer with A/D, brake with your heels on S, push off with W, and jump to bail out. A sled left standing stays put on a slope: its runners settle into the snow. A sled you let go of at full speed does not: it has places to be. Odin does not cover runaway sleds.
+You can also **sit in it and ride down a snowy slope**: steer with A/D, brake with your heels on S, push off with W (or back with S, once stopped: out of a dead end), and jump to bail out. A sled left standing stays put on a slope: its runners settle into the snow. A sled you let go of at full speed does not: it has places to be. Odin does not cover runaway sleds.
 
 While you pull it, an icon shows what the runners are on — snow, deep snow, ice, frozen ground, wood, stone or ground — in case your legs haven't told you already.
 
@@ -56,7 +56,7 @@ The body is the cart's, borrowed without asking. Underneath are curved runners w
 | 3 - Hauling | GroundStaminaDrain | 1.5 | run stamina multiplier on bare ground |
 | 4 - Riding | MaxSpeed | 16 m/s | air drag grows steeply above it |
 | 4 - Riding | SteerStrength / BrakeFriction | 1 / 0.2 | |
-| 4 - Riding | PushImpulse / PushStamina / PushMaxSpeed | 1 m/s / 6 / 3 m/s | one push per press of W |
+| 4 - Riding | PushImpulse / PushStamina / PushMaxSpeed | 1 m/s / 6 / 3 m/s | one push per press of W, or of S backwards once the sled has stopped |
 | 4 - Riding | CrashMinSpeed / CrashMaxSpeed | 6 / 14 m/s | impact damage from / in full |
 | 5 - Advanced: runner friction | SnowFriction / PowderFriction / IceFriction | 0.06 / 0.15 / 0.012 | along the runners |
 | 5 - Advanced: runner friction | FrozenGroundFriction / WoodFriction / StoneFriction / GroundFriction | 0.25 / 0.22 / 0.35 / 0.55 | |

@@ -76,8 +76,13 @@ namespace WinterSled
         private float m_controlsTime;
         private Vector3 m_sentControls;
         private bool m_pushHeld;
+        private bool m_backHeld;
+        // the rider kicked back and still holds S: no heel brake against their own kick
+        private bool m_brakeOff;
         private float m_nextPush;
         private const float PushInterval = 0.35f;
+        // S kicks back instead of braking below this speed (m/s), where there is nothing left to brake
+        private const float BackPushSpeed = 1f;
         private float m_sentTime;
 
         private float m_probeTimer;
@@ -147,6 +152,7 @@ namespace WinterSled
             {
                 m_nview.Register<Vector3>("WinterSled_Controls", RPC_Controls);
                 m_nview.Register("WinterSled_Push", RPC_Push);
+                m_nview.Register("WinterSled_PushBack", RPC_PushBack);
             }
         }
 
@@ -190,13 +196,20 @@ namespace WinterSled
         {
             m_controls = moveDir;
             m_controlsTime = Time.time;
-            // one push-off per press of W, paid in stamina; holding it doesn't drive the sled
+            // one push-off per press of W, paid in stamina; holding it doesn't drive the sled. S brakes, and on a sled
+            // that has (nearly) stopped, a press of S kicks back the same way: out of a dead end, away from a wall
             bool forward = moveDir.z > 0.5f;
             if (forward && !m_pushHeld && Time.time >= m_nextPush)
             {
-                TryPush();
+                TryPush(back: false);
             }
             m_pushHeld = forward;
+            bool backward = moveDir.z < -0.5f;
+            if (backward && !m_backHeld && Time.time >= m_nextPush && Speed < BackPushSpeed)
+            {
+                TryPush(back: true);
+            }
+            m_backHeld = backward;
             if (m_nview.IsOwner())
             {
                 return;
@@ -210,7 +223,7 @@ namespace WinterSled
             }
         }
 
-        private void TryPush()
+        private void TryPush(bool back)
         {
             var player = Player.m_localPlayer;
             // a push needs something slippery under the runners and some breath
@@ -228,11 +241,11 @@ namespace WinterSled
             m_nextPush = Time.time + PushInterval;
             if (m_nview.IsOwner())
             {
-                Push();
+                Push(back);
             }
             else
             {
-                m_nview.InvokeRPC("WinterSled_Push");
+                m_nview.InvokeRPC(back ? "WinterSled_PushBack" : "WinterSled_Push");
             }
         }
 
@@ -240,19 +253,28 @@ namespace WinterSled
         {
             if (m_nview.IsOwner())
             {
-                Push();
+                Push(back: false);
             }
         }
 
-        private void Push()
+        private void RPC_PushBack(long sender)
         {
-            var forward = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
-            if (Vector3.Dot(m_body.linearVelocity, forward) >= Plugin.Cfg.PushMaxSpeed.Value)
+            if (m_nview.IsOwner())
+            {
+                Push(back: true);
+            }
+        }
+
+        private void Push(bool back)
+        {
+            var dir = Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized * (back ? -1f : 1f);
+            if (Vector3.Dot(m_body.linearVelocity, dir) >= Plugin.Cfg.PushMaxSpeed.Value)
             {
                 return;
             }
+            m_brakeOff |= back;
             m_body.WakeUp();
-            m_body.AddForce(forward * Plugin.Cfg.PushImpulse.Value, ForceMode.VelocityChange);
+            m_body.AddForce(dir * Plugin.Cfg.PushImpulse.Value, ForceMode.VelocityChange);
         }
 
         private void RPC_Controls(long sender, Vector3 moveDir)
@@ -342,7 +364,10 @@ namespace WinterSled
             if (!m_resting)
             {
                 var controls = CurrentControls();
-                ApplyRunnerFriction(controls.z < -0.5f);
+                bool holdingBack = controls.z < -0.5f;
+                // the brake comes back once S is let go after a kick back
+                m_brakeOff &= holdingBack;
+                ApplyRunnerFriction(holdingBack && !m_brakeOff);
                 ApplyAirDrag();
                 ApplyStability();
                 if (m_contacts.Count > 0)

@@ -108,6 +108,8 @@ Downhill course in a second world (the author's own game, Seasons winter): a 230
 - Bumps: a crest throws the sled when its radius is under v²/(g·cos θ), about 14 m at 16 m/s on 28°. The first course had 0.7 m bumps 12 m long (radius ~10 m) and the sled rolled over on small bumps. With the centre of mass down at the runners (0.32 → 0.12 m) and `Stability` 1, on 1 m waves 30 m long (crest radius 21-25 m) the pitch swung 20-37°, the roll stayed within ±9° (one -22° that righted itself), no rollover, no damage.
 - Turning on ice: A/D turns the sled into a sideways skid (`IceGrip` 0.15 across the runners against `IceFriction` 0.012 along), which stops it far sooner than going straight: 66 m from the shore instead of ~120 m.
 
+- Kick back (S on a stopped sled): on the flat snow pad, sled pushed with W against a stone wall until W no longer moved it; each press of S then gave -0.6 to -0.7 m/s backwards (about 0.4 m on snow) for 6 stamina, and holding S after the kick doesn't brake it (it slows at the snow's 1.2 m/s², not the heels' ~5).
+
 Pulling on ice: whether the legs keep control decides it, not the sled (the runners' friction on ice is 0.012 everywhere). The game's slippery ice (`Character.ApplySlippery`: a ground collider with no friction on the `static_solid`/`Default` layers) makes the next velocity mostly the body's current one, so the harness (a 5000/1000 spring-damper) drags the puller back. The test masks with the layer's number, not its bit, so a `Water`-layer collider never qualifies. Running forward from a standstill, test profile, `god` on; speeds after 4-5 s:
 
 | Ice | `feet` | `slip` | No sled | Sled, `SureFootedPulling` off | Sled, on |
