@@ -24,6 +24,7 @@ namespace WinterSled
         public readonly ConfigEntry<float> IceGrip;
         public readonly ConfigEntry<float> MaxSpeed;
         public readonly ConfigEntry<float> AirDrag;
+        public readonly ConfigEntry<float> Stability;
         public readonly ConfigEntry<float> StaticFrictionSpeed;
         public readonly ConfigEntry<float> CliffAngle;
         public readonly ConfigEntry<float> PowderDepth;
@@ -36,6 +37,7 @@ namespace WinterSled
         public readonly ConfigEntry<float> LoadPenalty;
         public readonly ConfigEntry<float> FullLoadWeight;
         public readonly ConfigEntry<float> GroundStaminaDrain;
+        public readonly ConfigEntry<bool> SureFootedPulling;
         public readonly ConfigEntry<bool> SlowCartsInSnow;
         public readonly ConfigEntry<float> CartSnowPullSpeed;
         public readonly ConfigEntry<float> CartPowderPullSpeed;
@@ -95,6 +97,7 @@ namespace WinterSled
             LoadPenalty = BindNumber(Hauling, "LoadPenalty", 0.1f, "Extra speed lost on bare ground with a fully loaded sled (cargo already makes the runners drag harder).");
             FullLoadWeight = BindNumber(Hauling, "FullLoadWeight", 400f, "Cargo weight that counts as fully loaded for LoadPenalty.", 50f, 2000f);
             GroundStaminaDrain = BindNumber(Hauling, "GroundStaminaDrain", 1.5f, "Run stamina drain multiplier while dragging the sled over bare ground.", 1f, 5f);
+            SureFootedPulling = Bind(Hauling, "SureFootedPulling", true, "Pulling a sled, you keep your footing where the game takes it away on ice (Deep North ice, and with Seasons frozen water shallower than 4 m), as in ice shoes: you run with the sled there as on other ice. More than vanilla allows: there the vanilla cart can't be pulled at all. Off: vanilla rules, the sled drags you to a crawl there.");
 
             MaxSpeed = BindNumber(Riding, "MaxSpeed", 16f, "Speed (m/s) above which air drag grows steeply.", 4f, 40f);
             SteerStrength = BindNumber(Riding, "SteerStrength", 1f, "How hard A/D turn the sled when you ride it downhill.", 0f, 4f);
@@ -116,7 +119,9 @@ namespace WinterSled
             IceGrip = BindNumber(Surfaces, "IceGrip", 0.15f, "Sideways friction of the runners on ice.");
 
             BaseMass = BindNumber(Physics, "BaseMass", 40f, "Empty sled mass. Cargo adds 10% of its weight, like the cart.", 10f, 200f);
-            AirDrag = BindNumber(Physics, "AirDrag", 0.55f, "Air drag (N per (m/s)²) of a sled with a rider: what tops out a downhill run before MaxSpeed.", 0f, 5f);
+            // a new key: the old AirDrag (0.55) slowed a coasting sled four times too much, and saved configs would keep it
+            AirDrag = BindNumber(Physics, "AirResistance", 0.12f, "Air drag (N per (m/s)²) of a sled with a rider. MaxSpeed tops out a downhill run; this is what a sled coasting on the flat loses.", 0f, 5f);
+            Stability = BindNumber(Physics, "Stability", 1f, "How hard the sled keeps itself level with the ground under it (and flat in the air), against tipping over on bumps. 0 = none.", 0f, 3f);
             StaticFrictionSpeed = BindNumber(Physics, "StaticFrictionSpeed", 1.5f, "Below this speed (m/s) a sled nobody pulls or rides is held by the runners' static friction (they settle into the snow), so it stays put on a slope; not on ice.", 0f, 10f);
             SteerResponse = BindNumber(Physics, "SteerResponse", 20f, "How quickly the sled answers A/D (turn rate gain); the runners' grip fights it.", 1f, 60f);
             CliffAngle = BindNumber(Physics, "CliffAngle", 52f, "Slopes steeper than this (degrees) in the cold biomes are bare rock, not snow.", 20f, 89f);

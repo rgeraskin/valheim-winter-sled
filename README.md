@@ -51,6 +51,7 @@ The body is the cart's, borrowed without asking. Underneath are curved runners w
 | 2 - Sound and effects | SoundVolume / SnowSpray | 0.6 / true | per player |
 | 2 - Sound and effects | SeatAnimation | `emote_sit` | `attach_chair` sits upright |
 | 3 - Hauling | GroundPullSpeed / FrozenPullSpeed / FloorPullSpeed | 0.8 / 0.9 / 0.9 | on top of the runners' own drag |
+| 3 - Hauling | SureFootedPulling | on | pulling a sled, you keep your footing on slippery ice (Deep North, shallow frozen water with Seasons), where the vanilla cart can't be pulled at all; off = vanilla rules |
 | 3 - Hauling | LoadPenalty / FullLoadWeight | 0.1 / 400 | |
 | 3 - Hauling | GroundStaminaDrain | 1.5 | run stamina multiplier on bare ground |
 | 4 - Riding | MaxSpeed | 16 m/s | air drag grows steeply above it |
@@ -61,7 +62,7 @@ The body is the cart's, borrowed without asking. Underneath are curved runners w
 | 5 - Advanced: runner friction | FrozenGroundFriction / WoodFriction / StoneFriction / GroundFriction | 0.25 / 0.22 / 0.35 / 0.55 | |
 | 5 - Advanced: runner friction | RunnerGrip / IceGrip | 0.6 / 0.15 | across the runners |
 | 6 - Advanced: physics | BaseMass | 40 | cargo adds 10% of its weight |
-| 6 - Advanced: physics | AirDrag / StaticFrictionSpeed / SteerResponse | 0.55 / 1.5 m/s / 20 | below StaticFrictionSpeed a sled nobody pulls or rides is held by static friction (not on ice) |
+| 6 - Advanced: physics | AirResistance / Stability / StaticFrictionSpeed / SteerResponse | 0.12 / 1 / 1.5 m/s / 20 | Stability keeps the sled level with the ground (against tipping over on bumps); below StaticFrictionSpeed a sled nobody pulls or rides is held by static friction (not on ice) |
 | 6 - Advanced: physics | CliffAngle / PowderDepth | 52° / 0.3 m | steeper cold ground is stone; Deep North snow deeper than this is powder |
 | 6 - Advanced: physics | DebugLog | false | |
 

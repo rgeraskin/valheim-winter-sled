@@ -21,6 +21,9 @@ namespace WinterSled
         private const float ProbeInterval = 0.2f;
         private const float SprayInterval = 0.12f;
         private const float TrailStep = 1f;
+        // Stability at 1: righting (1/s² per radian of tilt) and damping (1/s), a little under critical
+        private const float StabilitySpring = 40f;
+        private const float StabilityDamping = 9f;
 
         private static readonly HashSet<SledController> s_instances = new HashSet<SledController>();
 
@@ -80,6 +83,8 @@ namespace WinterSled
         private float m_probeTimer;
         private float m_sprayTimer;
         private Vector3 m_lastTrailPos;
+        // what "level" is for the sled: the ground under the runners, smoothed
+        private Vector3 m_groundUp = Vector3.up;
         private float m_debugTimer;
         private float m_debugAlong, m_debugAcross, m_debugTime;
 
@@ -113,8 +118,8 @@ namespace WinterSled
                 return;
             }
 
-            // low and a little behind the middle: the runners, the deck and whoever sits on it
-            m_body.centerOfMass = new Vector3(0f, 0.32f, -0.08f);
+            // a little behind the middle and down by the runners, so a bump that lifts one runner doesn't tip the sled
+            m_body.centerOfMass = new Vector3(0f, 0.12f, -0.08f);
             m_body.linearDamping = 0.02f;
             m_body.angularDamping = 0.6f;
 
@@ -339,6 +344,7 @@ namespace WinterSled
                 var controls = CurrentControls();
                 ApplyRunnerFriction(controls.z < -0.5f);
                 ApplyAirDrag();
+                ApplyStability();
                 if (m_contacts.Count > 0)
                 {
                     ApplyRiderControls(controls);
@@ -460,9 +466,42 @@ namespace WinterSled
             if (speed > max)
             {
                 // a soft wall: enough to stop gaining speed on any slope
-                drag += m_body.mass * (speed - max) * 3f;
+                drag += m_body.mass * (speed - max) * 6f;
             }
             m_body.AddForce(-v / speed * drag, ForceMode.Force);
+        }
+
+        /// <summary>
+        /// Keeps the sled level with the ground under it: a spring towards the runners' contact normal (in the air,
+        /// towards the last ground and slowly to level), damped on roll and pitch only. A light cart body on narrow
+        /// runners has little else to hold it: without this, a bump that lifts one runner rolls it over, and a jump
+        /// lands it on its nose.
+        /// </summary>
+        private void ApplyStability()
+        {
+            float k = Plugin.Cfg.Stability.Value;
+            if (k <= 0f)
+            {
+                return;
+            }
+            if (m_contacts.Count > 0)
+            {
+                var normal = Vector3.zero;
+                foreach (var c in m_contacts)
+                {
+                    normal += c.Normal;
+                }
+                m_groundUp = Vector3.Slerp(m_groundUp, normal.normalized, 0.2f);
+            }
+            else
+            {
+                m_groundUp = Vector3.Slerp(m_groundUp, Vector3.up, Time.fixedDeltaTime);
+            }
+            var up = transform.up;
+            var w = m_body.angularVelocity;
+            // roll and pitch; turning (yaw) is the rider's
+            var tilting = w - Vector3.Dot(w, up) * up;
+            m_body.AddTorque((Vector3.Cross(up, m_groundUp) * StabilitySpring - tilting * StabilityDamping) * k, ForceMode.Acceleration);
         }
 
         private void ApplyRiderControls(Vector3 controls)

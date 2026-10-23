@@ -41,6 +41,15 @@ namespace WinterSledDevHarness
             m_dir = Environment.GetEnvironmentVariable("WINTERSLED_HARNESS_DIR");
             if (string.IsNullOrEmpty(m_dir))
             {
+                // a game started from a mod manager (through Steam) has no such variable: a harness_dir.txt next to the dll
+                var file = Path.Combine(Path.GetDirectoryName(Info.Location) ?? "", "harness_dir.txt");
+                if (File.Exists(file))
+                {
+                    m_dir = File.ReadAllText(file).Trim();
+                }
+            }
+            if (string.IsNullOrEmpty(m_dir))
+            {
                 Logger.LogInfo("WINTERSLED_HARNESS_DIR not set, harness idle");
                 enabled = false;
                 return;
@@ -287,6 +296,42 @@ namespace WinterSledDevHarness
                 case "time":
                     EnvMan.instance.m_debugTime = F(a[1]);
                     break;
+                case "finddepth":
+                    {
+                        // finddepth <min> <max> [radius]: water this deep (sea bed below the water level, flat), nearest first
+                        float minD = F(a[1]), maxD = F(a[2]), radius = a.Length > 3 ? F(a[3]) : 1000f;
+                        var origin = player.transform.position;
+                        var wg = WorldGenerator.instance;
+                        float water = ZoneSystem.instance.m_waterLevel;
+                        int found = 0;
+                        for (float r = 0; r <= radius && found < 5; r += 8f)
+                        {
+                            int steps = Mathf.Max(1, Mathf.CeilToInt(2 * Mathf.PI * r / 8f));
+                            for (int i = 0; i < steps && found < 5; i++)
+                            {
+                                float ang = 2 * Mathf.PI * i / steps;
+                                float x = origin.x + Mathf.Cos(ang) * r, z = origin.z + Mathf.Sin(ang) * r;
+                                // the depth all around, so a run of a few metres stays at it
+                                float dMin = float.MaxValue, dMax = float.MinValue;
+                                for (int k = 0; k < 9; k++)
+                                {
+                                    float d = water - wg.GetHeight(x + (k % 3 - 1) * 8f, z + (k / 3 - 1) * 8f);
+                                    dMin = Mathf.Min(dMin, d);
+                                    dMax = Mathf.Max(dMax, d);
+                                }
+                                if (dMin >= minD && dMax <= maxD)
+                                {
+                                    Log($"depth {dMin:0.0}-{dMax:0.0} at {x:0} {z:0} biome={wg.GetBiome(x, z)} dist={r:0}");
+                                    found++;
+                                }
+                            }
+                        }
+                        if (found == 0)
+                        {
+                            Log($"no water {minD}-{maxD} m deep within {radius}");
+                        }
+                    }
+                    break;
                 case "findbiome":
                     FindBiome((Heightmap.Biome)Enum.Parse(typeof(Heightmap.Biome), a[1]), a.Length > 2 ? F(a[2]) : 3000f, a.Length > 3 ? F(a[3]) : 8f, a.Length > 4 ? F(a[4]) : 25f);
                     break;
@@ -407,6 +452,57 @@ namespace WinterSledDevHarness
                     var inv = m_sled.GetComponent<Vagon>().m_container.GetInventory();
                     inv.AddItem(ObjectDB.instance.GetItemPrefab(a[1]), int.Parse(a[2]));
                     Log($"cargo weight {inv.GetTotalWeight()}");
+                    break;
+                case "findslip":
+                    {
+                        // findslip [r] [go]: slippery colliders near the player (no friction, on the layers the game
+                        // lets you slip on: vanilla Deep North ice, shallow frozen water with Seasons); go: stand on the nearest
+                        float r = a.Length > 1 ? F(a[1]) : 300f;
+                        int mask = LayerMask.GetMask("static_solid", "Default");
+                        var slips = FindObjectsByType<Collider>(FindObjectsSortMode.None)
+                            .Where(c => !c.isTrigger && c.enabled && c.sharedMaterial != null && c.sharedMaterial.dynamicFriction <= 0f
+                                && (mask & (1 << c.gameObject.layer)) != 0 && c.GetComponentInParent<Character>() == null && c.GetComponentInParent<Vagon>() == null)
+                            .Select(c => new { c, d = Vector3.Distance(c.ClosestPointOnBounds(player.transform.position), player.transform.position) })
+                            .Where(t => t.d < r).OrderBy(t => t.d).Take(10).ToList();
+                        foreach (var t in slips)
+                        {
+                            var c = t.c;
+                            float d = t.d;
+                            var bb = c.bounds;
+                            Log($"slip {c.name} (root {c.transform.root.name}) d={d:0} center={bb.center.ToString("F0")} size={bb.size.ToString("F0")} top={bb.max.y:0.0} layer={LayerMask.LayerToName(c.gameObject.layer)} mat={c.sharedMaterial.name}");
+                        }
+                        if (slips.Count == 0)
+                        {
+                            Log($"no slippery colliders within {r}");
+                        }
+                        else if (a.Length > 2 && a[2] == "go")
+                        {
+                            var bb = slips[0].c.bounds;
+                            var top = new Vector3(bb.center.x, bb.max.y + 1.5f, bb.center.z);
+                            if (Physics.Raycast(top + Vector3.up * 50f, Vector3.down, out var hit, 200f, mask) )
+                            {
+                                top.y = hit.point.y + 1f;
+                            }
+                            player.TeleportTo(top, player.transform.rotation, true);
+                            yield return new WaitForSeconds(3f);
+                            while (player.IsTeleporting())
+                            {
+                                yield return null;
+                            }
+                            Log($"on {(player.m_lastGroundCollider ? player.m_lastGroundCollider.name : "-")} at {player.transform.position.ToString("F1")}");
+                        }
+                    }
+                    break;
+                case "iceitems":
+                    // items that keep you from slipping on ice (ice shoes) or let you skate
+                    foreach (var go in ObjectDB.instance.m_items)
+                    {
+                        var shared = go.GetComponent<ItemDrop>()?.m_itemData.m_shared;
+                        if (shared != null && (shared.m_iceShoes || shared.m_iceSkates))
+                        {
+                            Log($"item {go.name} name={Localization.instance.Localize(shared.m_name)} iceShoes={shared.m_iceShoes} iceSkates={shared.m_iceSkates} type={shared.m_itemType}");
+                        }
+                    }
                     break;
                 case "state":
                     LogState(a.Length > 1 ? a[1] : "");
@@ -802,6 +898,9 @@ namespace WinterSledDevHarness
             if (player != null)
             {
                 var pv = player.m_body.linearVelocity;
+                sb.Append($"liquid={player.InLiquidDepth():0.00} waterLvl={player.GetLiquidLevel():0.00} ");
+                var gc = player.m_lastGroundCollider;
+                sb.Append($"feet={(gc ? gc.name : "-")}/{(gc && gc.sharedMaterial ? gc.sharedMaterial.dynamicFriction.ToString("0.00") : "-")} slip={player.m_slipping} run={player.m_running} slipSpeed={player.m_slipperySpeed:0.0} ");
                 sb.Append($"player hp={player.GetHealth():0} pos={player.transform.position.ToString("F1")} v={new Vector2(pv.x, pv.z).magnitude:0.00} biome={player.GetCurrentBiome()} stamina={player.GetStamina():0} attached={player.IsAttached()} ");
                 var se = player.GetSEMan().GetStatusEffect(SledHaulEffect.Hash);
                 if (se != null)
@@ -821,7 +920,7 @@ namespace WinterSledDevHarness
                 var body = m_sled.GetComponent<Rigidbody>();
                 var v = body.linearVelocity;
                 float along = Vector3.Dot(v, m_sled.transform.forward);
-                sb.Append($"sled pos={m_sled.transform.position.ToString("F1")} speed={v.magnitude:0.00} along={along:0.00} side={Vector3.Dot(v, m_sled.transform.right):0.00} up.y={m_sled.transform.up.y:0.00} surface={(sled ? sled.Surface.ToString() : "-")} pulled={vagon.IsAttached()} rider={(sled ? sled.HasRider() : false)} mass={body.mass:0} hp={m_sled.GetComponent<ZNetView>().GetZDO().GetFloat(ZDOVars.s_health, -1f):0} yaw={m_sled.transform.eulerAngles.y:0.00} pitch={Mathf.DeltaAngle(0f, m_sled.transform.eulerAngles.x):0.00} roll={Mathf.DeltaAngle(0f, m_sled.transform.eulerAngles.z):0.00} w=({body.angularVelocity.x:0.000},{body.angularVelocity.y:0.000},{body.angularVelocity.z:0.000}) owner={m_sled.GetComponent<ZNetView>().IsOwner()}");
+                sb.Append($"sled pos={m_sled.transform.position.ToString("F1")} speed={v.magnitude:0.00} along={along:0.00} side={Vector3.Dot(v, m_sled.transform.right):0.00} up.y={m_sled.transform.up.y:0.00} surface={(sled ? sled.Surface.ToString() : "-")} pulled={vagon.IsAttached()} rider={(sled ? sled.HasRider() : false)} mass={body.mass:0} hp={m_sled.GetComponent<ZNetView>().GetZDO().GetFloat(ZDOVars.s_health, -1f):0} solid={(sled ? sled.OnSolidGround : false)} sledWaterLvl={(m_sled.TryGetComponent<Floating>(out var fl) ? fl.m_waterLevel : -1):0.00} floatDepth={(fl ? fl.GetFloatDepth() : 0):0.00} yaw={m_sled.transform.eulerAngles.y:0.00} pitch={Mathf.DeltaAngle(0f, m_sled.transform.eulerAngles.x):0.00} roll={Mathf.DeltaAngle(0f, m_sled.transform.eulerAngles.z):0.00} w=({body.angularVelocity.x:0.000},{body.angularVelocity.y:0.000},{body.angularVelocity.z:0.000}) owner={m_sled.GetComponent<ZNetView>().IsOwner()}");
             }
             Log(sb.ToString());
         }

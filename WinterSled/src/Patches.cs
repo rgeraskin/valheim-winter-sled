@@ -45,6 +45,49 @@ namespace WinterSled
         }
     }
 
+    [HarmonyPatch(typeof(Character), nameof(Character.UpdateWalking))]
+    internal static class SureFootedWhilePulling
+    {
+        // Where the game takes the legs' control away on ice (Deep North ice; with Seasons, frozen water shallower than
+        // 4 m), the sled on the harness drags the puller to a crawl, while elsewhere the same-looking ice runs normally.
+        // Pulling a sled there, the puller keeps their footing: the game's own "ice shoes" flag, held for this step.
+        // Ice where the legs keep control (Seasonality's, Seasons' deep water) is left alone, gliding and all.
+        private static void Prefix(Character __instance, ref bool __state)
+        {
+            __state = __instance == Player.m_localPlayer && !__instance.m_iceShoes && SledController.LocalPulled != null
+                && Plugin.Cfg.SureFootedPulling.Value && LosesFooting(__instance.m_lastGroundCollider);
+            if (__state)
+            {
+                __instance.m_iceShoes = true;
+            }
+        }
+
+        private static void Postfix(Character __instance, bool __state)
+        {
+            if (__state)
+            {
+                __instance.m_iceShoes = false;
+            }
+        }
+
+        private static bool LosesFooting(Collider ground)
+        {
+            if (ground == null)
+            {
+                return false;
+            }
+            // Seasons' frozen sea: Seasons itself decides by the depth (and leaves deep water's legs alone either way)
+            if (ground.name == "IceSurface")
+            {
+                return true;
+            }
+            // the game's own test in Character.ApplySlippery, quirk included: it masks with the layer's number, not
+            // its bit, so a frozen Water layer (Seasonality) never loses footing
+            var material = ground.sharedMaterial;
+            return material != null && material.dynamicFriction <= 0f && (Character.s_slipperyStuffMask & ground.gameObject.layer) != 0;
+        }
+    }
+
     [HarmonyPatch(typeof(ImpactEffect), nameof(ImpactEffect.OnCollisionEnter))]
     internal static class CrashOnlyHeadOn
     {
