@@ -389,8 +389,11 @@ namespace WinterSled
         };
 
         // the hint shown when sitting down: the player's own key bindings, then the words
-        public const string ControlsHint =
-            "[$KEY_Left/$KEY_Right] $wintersled_steer   [$KEY_Backward] $wintersled_brake   [$KEY_Forward] $wintersled_push   [$KEY_Jump] $wintersled_getoff";
+        // with a gamepad the game names $KEY_Jump by its button, but walking has no "Joy" binding of its own (it is the
+        // left stick), so $KEY_Forward would still read W: name the stick's directions instead
+        public static string ControlsHint => ZInput.IsGamepadActive()
+            ? "[$KEY_JoyLStickLeft/$KEY_JoyLStickRight] $wintersled_steer   [$KEY_JoyLStickDown] $wintersled_brake   [$KEY_JoyLStickUp] $wintersled_push   [$KEY_Jump] $wintersled_getoff"
+            : "[$KEY_Left/$KEY_Right] $wintersled_steer   [$KEY_Backward] $wintersled_brake   [$KEY_Forward] $wintersled_push   [$KEY_Jump] $wintersled_getoff";
 
         public static void Register()
         {

@@ -493,6 +493,10 @@ namespace WinterSledDevHarness
                         }
                     }
                     break;
+                case "loc":
+                    // loc <text...>: what the game's localization makes of a text ($tokens, $KEY_ bindings)
+                    Log($"loc {Localization.instance.Localize(string.Join(" ", a.Skip(1)))}");
+                    break;
                 case "iceitems":
                     // items that keep you from slipping on ice (ice shoes) or let you skate
                     foreach (var go in ObjectDB.instance.m_items)
