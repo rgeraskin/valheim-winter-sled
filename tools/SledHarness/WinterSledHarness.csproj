@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Winter Sled's commands for the shared valheim-dev-harness (../../../valheim-dev-harness): the sled, and tamed
+       animals pulling it (Beasts of Burden, OdinHorse). Dev-only, never shipped. -->
+
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <AssemblyName>WinterSledHarness</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <ImplicitlyExpandNETStandardFacades>false</ImplicitlyExpandNETStandardFacades>
+    <OutputPath>bin/$(Configuration)/</OutputPath>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <ValheimDir Condition="'$(ValheimDir)' == ''">$(VALHEIM_DIR)</ValheimDir>
+    <ManagedDir Condition="Exists('$(ValheimDir)/valheim_server_Data/Managed')">$(ValheimDir)/valheim_server_Data/Managed</ManagedDir>
+    <ManagedDir Condition="'$(ManagedDir)' == ''">$(ValheimDir)/valheim_Data/Managed</ManagedDir>
+    <BepInExDir>$(ValheimDir)/BepInEx</BepInExDir>
+    <!-- where valheim-dev-harness is checked out (built with `mise run build` there) -->
+    <ValheimDevHarnessDir Condition="'$(ValheimDevHarnessDir)' == ''">$(MSBuildThisFileDirectory)../../../valheim-dev-harness</ValheimDevHarnessDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="ValheimDevHarness" HintPath="$(ValheimDevHarnessDir)/DevHarness/bin/Release/ValheimDevHarness.dll" Private="false" />
+    <Reference Include="WinterSled" HintPath="../../WinterSled/bin/$(Configuration)/WinterSled.dll" Publicize="true" Private="false" />
+    <Reference Include="BepInEx" HintPath="$(BepInExDir)/core/BepInEx.dll" Private="false" />
+    <Reference Include="assembly_valheim" HintPath="$(ManagedDir)/assembly_valheim.dll" Publicize="true" Private="false" />
+    <Reference Include="assembly_utils" HintPath="$(ManagedDir)/assembly_utils.dll" Publicize="true" Private="false" />
+    <Reference Include="netstandard" HintPath="$(ManagedDir)/netstandard.dll" Private="false" />
+    <Reference Include="UnityEngine" HintPath="$(ManagedDir)/UnityEngine.dll" Private="false" />
+    <Reference Include="UnityEngine.CoreModule" HintPath="$(ManagedDir)/UnityEngine.CoreModule.dll" Private="false" />
+    <Reference Include="UnityEngine.PhysicsModule" HintPath="$(ManagedDir)/UnityEngine.PhysicsModule.dll" Private="false" />
+    <Reference Include="UnityEngine.ImageConversionModule" HintPath="$(ManagedDir)/UnityEngine.ImageConversionModule.dll" Private="false" />
+    <Reference Include="UnityEngine.ScreenCaptureModule" HintPath="$(ManagedDir)/UnityEngine.ScreenCaptureModule.dll" Private="false" />
+  </ItemGroup>
+
+</Project>

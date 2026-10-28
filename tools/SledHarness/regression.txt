@@ -1,0 +1,46 @@
+# Sled without animals, on the SledTest course (x -1616: 6° snow from z -219, frozen dirt strip at z -164..-156,
+# 22° snow from z -124): run it against two builds and compare the rec lines.
+#   VH_WORLD=SledTest deploy.sh Jotunn.dll WinterSled.dll WinterSledHarness.dll && cmd.sh < regression.txt
+waitplayer
+god
+time 0.42
+tp -1616 -219 0
+look 0
+tidy 200
+echo R1 pull over snow, 3 s from a standstill
+sled 4
+wait 1
+pull
+stick 0 1 3
+sledrec 0.5 0.5
+padrelease
+unhitch
+echo R2 left standing on the 6 deg slope: static friction holds it
+sledrec 3 1
+echo R3 ride from rest down the 6 deg slope
+ride
+sledrec 7 1
+echo R4 brake with S
+stick 0 -1 2
+sledrec 0.5 0.5
+padrelease
+dismount
+echo R5 ride down the 22 deg slope
+tp -1616 -132 0
+look 0
+sled 3
+wait 1
+ride
+sledrec 4 0.5
+dismount
+echo R6 pull over the frozen dirt strip
+tp -1616 -168 0
+look 0
+sled 4
+wait 1
+pull
+stick 0 1 3
+sledrec 0.5 0.5
+padrelease
+unhitch
+echo end
