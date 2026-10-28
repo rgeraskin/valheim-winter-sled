@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0
+
+- New: draft animals. Tame animals pull the sled with a mod that hitches carts to them, and you can ride in the sled while they do. [Draft Animals](https://www.nexusmods.com/valheim/mods/4284) (boar, deer, wolf): the sled gets the same hitch and driver's bench as the cart; Shift+E at the shafts, then drive from the bench or let the animal follow you. [Beasts of Burden](https://thunderstore.io/c/valheim/p/AWLGaming/BeastsOfBurden/) (lox, wolf, boar) and [OdinHorse](https://thunderstore.io/c/valheim/p/OdinPlus/OdinHorse/) (horses) hitch the sled as they do any cart.
+- The animal holds the sled: when it slows down or stops, the sled stops behind it instead of gliding on into it (`AnimalHoldBack`); on a climb the sled doesn't roll back down, and a team standing on a slope stays put.
+- On slopes the shafts meet the animal at hip height above the ground under them (`LevelAnimalHitch`), for the sled and the vanilla cart alike: the animal mods measure the hitch from the animal's feet, which behind a big animal puts it in the ground downhill and in the air uphill.
+- On slippery ice (Deep North, and shallow frozen water with Seasons) an animal pulling the sled keeps its footing, as you do (`SureFootedPulling`).
+- An animal keeps its own pace on any ground: the snow-versus-ground trade-off applies to players only for now.
+
 ## 0.1.2
 
 - S kicks back on a sled that has (nearly) stopped, like W forward: one push per press, same stamina. Out of a dead end, away from a wall. At speed S is still the brake.

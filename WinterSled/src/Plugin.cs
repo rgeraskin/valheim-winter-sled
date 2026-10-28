@@ -14,6 +14,7 @@ namespace WinterSled
     [BepInDependency(Jotunn.Main.ModGuid)]
     [BepInDependency(SeasonsCompat.Guid, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(SeasonalityCompat.Guid, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(DraftAnimalsCompat.Guid, BepInDependency.DependencyFlags.SoftDependency)]
     [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.Minor)]
     internal class Plugin : BaseUnityPlugin
     {
@@ -31,6 +32,7 @@ namespace WinterSled
             Translations.Register();
             SeasonsCompat.Init();
             SeasonalityCompat.Init();
+            DraftAnimalsCompat.Init();
             LiveSettings.Hook();
             PrefabManager.OnVanillaPrefabsAvailable += SledBuilder.Register;
             new Harmony(Guid).PatchAll(typeof(Plugin).Assembly);

@@ -30,6 +30,19 @@ namespace WinterSled
         /// <summary>Every sled loaded in the world (for settings changed in game).</summary>
         public static IEnumerable<SledController> Instances => s_instances;
 
+        /// <summary>Whether this animal pulls a sled (on the sled's owner, where the hitch joints are), for its footing on ice.</summary>
+        public static bool IsHauledBy(Character animal)
+        {
+            foreach (var sled in s_instances)
+            {
+                if (sled.m_animalPuller == animal)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         /// <summary>The sled the local player is pulling, for the hauling status effect.</summary>
         public static SledController LocalPulled { get; private set; }
 
@@ -53,6 +66,8 @@ namespace WinterSled
         private Rigidbody m_body;
         private Floating m_floating;
         private SledSeat m_seat;
+        // Draft Animals' hitch, when that mod is installed
+        private Component m_draftHitch;
         private readonly HashSet<Collider> m_runners = new HashSet<Collider>();
         private readonly List<Transform> m_runnerTails = new List<Transform>();
         private PhysicsMaterial m_slideMaterial;
@@ -67,6 +82,10 @@ namespace WinterSled
         }
 
         private readonly List<Contact> m_contacts = new List<Contact>();
+        private readonly List<ConfigurableJoint> m_joints = new List<ConfigurableJoint>(2);
+        // the animal pulling the sled, seen on the last physics step (owner only)
+        private Character m_animalPuller;
+
         private readonly List<ContactPoint> m_contactBuffer = new List<ContactPoint>(32);
         private readonly int[] m_surfaceVotes = new int[Enum.GetValues(typeof(Surface)).Length];
 
@@ -103,6 +122,7 @@ namespace WinterSled
             m_body = GetComponent<Rigidbody>();
             m_floating = GetComponent<Floating>();
             m_seat = GetComponentInChildren<SledSeat>(true);
+            m_draftHitch = DraftAnimalsCompat.HitchOf(gameObject);
             foreach (var col in GetComponentsInChildren<Collider>(true))
             {
                 if (col.name.StartsWith(RunnerPrefix))
@@ -176,7 +196,25 @@ namespace WinterSled
 
         public bool IsPulled()
         {
-            return m_vagon != null && m_vagon.IsAttached();
+            return m_vagon != null && (m_vagon.IsAttached() || DraftAnimalsCompat.IsHitched(m_draftHitch)
+                || (m_nview != null && m_nview.IsValid() && m_nview.IsOwner() && Puller() != null));
+        }
+
+        /// <summary>
+        /// Who pulls the sled, on the owner (where the joints are): a player in the vanilla harness, or an animal that a
+        /// cart-hitching mod tied on, with the vanilla joint (Beasts of Burden, OdinHorse) or one of its own (Draft Animals).
+        /// </summary>
+        public Character Puller()
+        {
+            GetComponents(m_joints);
+            foreach (var joint in m_joints)
+            {
+                if (joint != null && joint.connectedBody != null && joint.connectedBody.TryGetComponent<Character>(out var character))
+                {
+                    return character;
+                }
+            }
+            return null;
         }
 
         public bool HasRider()
@@ -342,6 +380,7 @@ namespace WinterSled
             if (!m_nview.IsOwner())
             {
                 m_contacts.Clear();
+                m_animalPuller = null;
                 return;
             }
 
@@ -349,7 +388,9 @@ namespace WinterSled
             {
                 m_lastContactTime = Time.fixedTime;
             }
-            bool active = IsPulled() || HasRider();
+            // something really holds or rides it: a joint (Draft Animals' "hitched" flag alone can precede its joint
+            // by seconds after a load, and a sled without static friction then slides off on a slope)
+            bool active = m_vagon.IsAttached() || Puller() != null || HasRider();
             // static friction: a sled left standing settles into the snow and stays put on a slope (the runners'
             // own friction is the sliding kind, far lower). Not on ice, where a bumped sled slides (and some ice,
             // like Seasonality's, has a material that would win over this one anyway).
@@ -361,13 +402,18 @@ namespace WinterSled
             }
             UpdateOwnerSurface();
 
-            if (!m_resting)
+            if (m_resting)
+            {
+                m_animalPuller = null;
+            }
+            else
             {
                 var controls = CurrentControls();
                 bool holdingBack = controls.z < -0.5f;
                 // the brake comes back once S is let go after a kick back
                 m_brakeOff &= holdingBack;
                 ApplyRunnerFriction(holdingBack && !m_brakeOff);
+                ApplyAnimalHoldBack();
                 ApplyAirDrag();
                 ApplyStability();
                 if (m_contacts.Count > 0)
@@ -476,6 +522,65 @@ namespace WinterSled
                 m_debugAlong += jAlong;
                 m_debugAcross += Mathf.Abs(jAcross);
             }
+        }
+
+        /// <summary>
+        /// An animal in harness holds the sled back to its own pace, as a player's feet do. Otherwise, when it slows or
+        /// stops on snow, the gliding sled shoves it from behind: the hitch sits on its rump, so it swings round and the
+        /// sled runs on into it. The animal's pace is what it walks at (its controller's velocity), not its body's, which
+        /// the shove itself moves.
+        /// </summary>
+        private void ApplyAnimalHoldBack()
+        {
+            float decel = Plugin.Cfg.AnimalHoldBack.Value;
+            var animal = Puller();
+            m_animalPuller = animal != null && !animal.IsPlayer() ? animal : null;
+            if (decel <= 0f || animal == null || animal.IsPlayer())
+            {
+                return;
+            }
+            var pace = animal.m_nview.IsValid() && animal.m_nview.IsOwner() ? animal.m_currentVel : animal.GetVelocity();
+            var forward = Vector3.ProjectOnPlane(transform.forward, m_groundUp).normalized;
+            var v = m_body.linearVelocity;
+            float catchingUp = Vector3.Dot(v - pace, forward);
+            float slowDown = HoldBack(catchingUp, decel, Time.fixedDeltaTime);
+            // and the other way: on a climb the sled must not roll back down, dragging the animal with it (its legs
+            // don't hold the sled's weight on a slope, as a player's do)
+            // the slope's pull for this step too, or the sled creeps back by what gravity adds in each step
+            float slopeBack = Mathf.Max(0f, -Vector3.Dot(Physics.gravity, forward));
+            float pullBack = HoldUp(catchingUp, Vector3.Dot(v, forward), slopeBack, decel, Time.fixedDeltaTime);
+            if (slowDown > 0f)
+            {
+                m_body.AddForce(-forward * slowDown, ForceMode.VelocityChange);
+            }
+            else if (pullBack > 0f)
+            {
+                m_body.AddForce(forward * pullBack, ForceMode.VelocityChange);
+            }
+        }
+
+        /// <summary>
+        /// How much speed (m/s) the harness gives back, in one step, to a sled rolling backwards behind its animal: up to
+        /// the animal's pace (it isn't dragged), but only while the sled rolls back; pulling it off is the animal's own job.
+        /// </summary>
+        public static float HoldUp(float catchingUp, float alongSled, float slopeBack, float maxDecel, float dt)
+        {
+            if (catchingUp > 0f || alongSled > StandingSpeed)
+            {
+                return 0f;
+            }
+            // what it rolls back by already (not more than the animal itself backs up), and what the slope would add
+            float back = Mathf.Max(0f, Mathf.Min(-catchingUp, -alongSled));
+            return Mathf.Min(back + slopeBack * dt, maxDecel * dt);
+        }
+
+        // a sled slower than this along its way stands: the harness holds it against the slope
+        private const float StandingSpeed = 0.05f;
+
+        /// <summary>How much speed (m/s) the harness takes off a sled catching up with its animal at this speed, in one step.</summary>
+        public static float HoldBack(float catchingUp, float maxDecel, float dt)
+        {
+            return catchingUp <= 0f ? 0f : Mathf.Min(catchingUp, maxDecel * dt);
         }
 
         private void ApplyAirDrag()

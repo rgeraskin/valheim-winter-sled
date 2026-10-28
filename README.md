@@ -1,6 +1,6 @@
 # Winter Sled
 
-A cargo sled for Valheim. Hitch it, load it, haul it — just like the cart, except this one actually likes winter. Reindeer not included: you are the reindeer.
+A cargo sled for Valheim. Hitch it, load it, haul it — just like the cart, except this one actually likes winter. Reindeer not included: you are the reindeer. Unless you bring a deer from an animal mod: the sled is animal-friendly (see [Draft animals](#draft-animals)).
 
 It rides on runners instead of wheels, so how it moves depends on what is under it:
 
@@ -24,6 +24,22 @@ The runners hiss on snow, sing on ice, scrape on frozen ground and grumble on di
 ## Seasons
 
 Plays along with [Seasons](https://thunderstore.io/c/valheim/p/shudnal/Seasons/) (shudnal) and [Seasonality](https://thunderstore.io/c/valheim/p/RustyMods/Seasonality/) (RustyMods): when winter reaches the Meadows, the sled is the first to celebrate. It glides through snowy meadows, forests and plains, and frozen lakes and sea become the fastest roads in Midgard (with Seasonality, turn on its "Water Freezes" option). Neither mod is required.
+
+## Draft animals
+
+An animal-friendly sled. New: tame animals can pull it too, with a mod that hitches carts to them. You can ride in the sled while they do. Tested with:
+
+- [Draft Animals](https://www.nexusmods.com/valheim/mods/4284) 1.1.3 (4gestr): put a harness on a tame boar, deer or wolf, press Shift+E at the sled's shafts, then drive it from the bench at the front or let it follow you. The sled gets the same hitch and driver's bench as the cart. A deer is as close to a reindeer as Midgard gets.
+- [Beasts of Burden](https://thunderstore.io/c/valheim/p/AWLGaming/BeastsOfBurden/) 1.0.7 (AWL Gaming's maintained fork): use the sled's handles with a tame lox, wolf or boar next to them.
+- [OdinHorse](https://thunderstore.io/c/valheim/p/OdinPlus/OdinHorse/) 1.9.3: horses, and other tame animals, pull it.
+
+When the animal slows down or stops, it holds the sled back (`AnimalHoldBack`), so the sled doesn't glide on into it on snow. On slopes the shafts stay at hip height above the ground (`LevelAnimalHitch`): the animal mods measure the hitch from the animal's feet, so behind a big animal the sled used to nose into the snow downhill and lift off uphill. The vanilla cart gets this too.
+
+One difference from pulling it yourself: an animal keeps its own pace on any ground. The snow-versus-ground trade-off (the sled slow on bare ground, the cart slow in snow) applies to players only for now. If that makes the sled too good with animals, tell me (a comment or a GitHub issue) and I'll fix it.
+
+Some quirks come from those mods or the game and happen with the vanilla cart too: with Beasts of Burden a hitch doesn't survive leaving the area, and the closest tame animal gets hitched rather than you. On Deep North ice the game takes an animal's footing away, as it does yours: pulling the sled, it keeps its footing like you do (`SureFootedPulling`); with the vanilla cart it slips and crawls, as in vanilla.
+
+Use one cart-hitching mod at a time. Not compatible: [LetsGo](https://thunderstore.io/c/valheim/p/Hardwire99/LetsGo/) (Hardwire99) hitches carts to animals itself and its page asks to remove Beasts of Burden, so it fights the mods above over the same hitch; it isn't tested with the sled.
 
 ## Languages
 
@@ -51,7 +67,9 @@ The body is the cart's, borrowed without asking. Underneath are curved runners w
 | 2 - Sound and effects | SoundVolume / SnowSpray | 0.6 / true | per player |
 | 2 - Sound and effects | SeatAnimation | `emote_sit` | `attach_chair` sits upright |
 | 3 - Hauling | GroundPullSpeed / FrozenPullSpeed / FloorPullSpeed | 0.8 / 0.9 / 0.9 | on top of the runners' own drag |
-| 3 - Hauling | SureFootedPulling | on | pulling a sled, you keep your footing on slippery ice (Deep North, shallow frozen water with Seasons), where the vanilla cart can't be pulled at all; off = vanilla rules |
+| 3 - Hauling | SureFootedPulling | on | pulling a sled, you (or an animal) keep your footing on slippery ice (Deep North, shallow frozen water with Seasons), where the vanilla cart can't be pulled at all; off = vanilla rules |
+| 3 - Hauling | AnimalHoldBack | 20 | with a mod that hitches carts to tame animals (Draft Animals, Beasts of Burden, OdinHorse): how hard (m/s²) the animal holds the sled back when it slows or stops, so the sled doesn't glide on into it; 0 = off |
+| 3 - Hauling | LevelAnimalHitch | true | with an animal mod: the shafts (sled and cart) meet the animal at hip height above the ground under them, so on slopes the vehicle doesn't nose into the ground downhill or lift off uphill; false = the animal mod's own hitch point |
 | 3 - Hauling | LoadPenalty / FullLoadWeight | 0.1 / 400 | |
 | 3 - Hauling | GroundStaminaDrain | 1.5 | run stamina multiplier on bare ground |
 | 4 - Riding | MaxSpeed | 16 m/s | air drag grows steeply above it |
@@ -72,7 +90,7 @@ Changes apply right away, also to sleds already built (with [Configuration Manag
 
 Needs [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/) and [Jötunn](https://thunderstore.io/c/valheim/p/ValheimModding/Jotunn/). Install with a mod manager, or put `WinterSled.dll` into `BepInEx/plugins`. Everyone on a server needs the mod.
 
-Tested on Valheim 1.0.20 with BepInExPack 5.4.2351, Jötunn 2.30.2, Seasons 1.10.5 and Seasonality 3.8.4, single player and with two players.
+Tested on Valheim 1.0.20 with BepInExPack 5.4.2351, Jötunn 2.30.2, Seasons 1.10.5 and Seasonality 3.8.4, single player and with two players; with Draft Animals 1.1.3, Beasts of Burden 1.0.7 and OdinHorse 1.9.3 in single player.
 
 ## Development
 

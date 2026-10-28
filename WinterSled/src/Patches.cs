@@ -52,10 +52,11 @@ namespace WinterSled
         // 4 m), the sled on the harness drags the puller to a crawl, while elsewhere the same-looking ice runs normally.
         // Pulling a sled there, the puller keeps their footing: the game's own "ice shoes" flag, held for this step.
         // Ice where the legs keep control (Seasonality's, Seasons' deep water) is left alone, gliding and all.
+        // An animal pulling a sled (with an animal mod) is the same: the game takes any creature's footing on that ice.
         private static void Prefix(Character __instance, ref bool __state)
         {
-            __state = __instance == Player.m_localPlayer && !__instance.m_iceShoes && SledController.LocalPulled != null
-                && Plugin.Cfg.SureFootedPulling.Value && LosesFooting(__instance.m_lastGroundCollider);
+            __state = !__instance.m_iceShoes && Plugin.Cfg.SureFootedPulling.Value && LosesFooting(__instance.m_lastGroundCollider)
+                && (__instance == Player.m_localPlayer ? SledController.LocalPulled != null : SledController.IsHauledBy(__instance));
             if (__state)
             {
                 __instance.m_iceShoes = true;

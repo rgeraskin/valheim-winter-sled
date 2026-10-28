@@ -38,6 +38,8 @@ namespace WinterSled
         public readonly ConfigEntry<float> FullLoadWeight;
         public readonly ConfigEntry<float> GroundStaminaDrain;
         public readonly ConfigEntry<bool> SureFootedPulling;
+        public readonly ConfigEntry<float> AnimalHoldBack;
+        public readonly ConfigEntry<bool> LevelAnimalHitch;
         public readonly ConfigEntry<bool> SlowCartsInSnow;
         public readonly ConfigEntry<float> CartSnowPullSpeed;
         public readonly ConfigEntry<float> CartPowderPullSpeed;
@@ -97,7 +99,9 @@ namespace WinterSled
             LoadPenalty = BindNumber(Hauling, "LoadPenalty", 0.1f, "Extra speed lost on bare ground with a fully loaded sled (cargo already makes the runners drag harder).");
             FullLoadWeight = BindNumber(Hauling, "FullLoadWeight", 400f, "Cargo weight that counts as fully loaded for LoadPenalty.", 50f, 2000f);
             GroundStaminaDrain = BindNumber(Hauling, "GroundStaminaDrain", 1.5f, "Run stamina drain multiplier while dragging the sled over bare ground.", 1f, 5f);
-            SureFootedPulling = Bind(Hauling, "SureFootedPulling", true, "Pulling a sled, you keep your footing where the game takes it away on ice (Deep North ice, and with Seasons frozen water shallower than 4 m), as in ice shoes: you run with the sled there as on other ice. More than vanilla allows: there the vanilla cart can't be pulled at all. Off: vanilla rules, the sled drags you to a crawl there.");
+            SureFootedPulling = Bind(Hauling, "SureFootedPulling", true, "Pulling a sled, you keep your footing where the game takes it away on ice (Deep North ice, and with Seasons frozen water shallower than 4 m), as in ice shoes: you run with the sled there as on other ice. More than vanilla allows: there the vanilla cart can't be pulled at all. An animal pulling the sled (with an animal mod) keeps its footing there too. Off: vanilla rules, the sled drags you (or the animal) to a crawl there.");
+            AnimalHoldBack = BindNumber(Hauling, "AnimalHoldBack", 20f, "With a mod that hitches carts to tame animals (Beasts of Burden, OdinHorse, Draft Animals): how hard (m/s²) an animal in harness holds the sled back when it slows down or stops, as a player's feet do. Without it the sled glides on into the animal on snow. 0 = off.", 0f, 40f);
+            LevelAnimalHitch = Bind(Hauling, "LevelAnimalHitch", true, "With an animal mod: the shafts of the sled, and of the cart, meet the animal at the height the mod means (about a player's hip) above the ground under them, not above the animal's feet. The animal mods measure from the feet, so on a slope the hitch behind a big animal sinks into the ground downhill (the vehicle noses down) or floats above it uphill (its front lifts off). Off: the animal mod's own hitch point.");
 
             MaxSpeed = BindNumber(Riding, "MaxSpeed", 16f, "Speed (m/s) above which air drag grows steeply.", 4f, 40f);
             SteerStrength = BindNumber(Riding, "SteerStrength", 1f, "How hard A/D turn the sled when you ride it downhill.", 0f, 4f);
