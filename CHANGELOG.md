@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+- Description update only; the mod itself is unchanged. Beasts of Burden 1.0.8 is tested with the sled: an animal no longer leaves its hitch settings behind for the next player, and holding Shift (the alternate placement key) while pressing E at the handles lets you take the sled yourself with a tame animal nearby. The README and the mod page say so, and no longer list "the closest tame animal gets hitched rather than you" as a quirk.
+
 ## 0.2.0
 
 - New: draft animals. Tame animals pull the sled with a mod that hitches carts to them, and you can ride in the sled while they do. [Draft Animals](https://www.nexusmods.com/valheim/mods/4284) (boar, deer, wolf): the sled gets the same hitch and driver's bench as the cart; Shift+E at the shafts, then drive from the bench or let the animal follow you. [Beasts of Burden](https://thunderstore.io/c/valheim/p/AWLGaming/BeastsOfBurden/) (lox, wolf, boar) and [OdinHorse](https://thunderstore.io/c/valheim/p/OdinPlus/OdinHorse/) (horses) hitch the sled as they do any cart.
