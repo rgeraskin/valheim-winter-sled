@@ -111,7 +111,7 @@ public class WinterSledHarness : BaseUnityPlugin
                 Harness.Log(Inv($"  interactable {i.GetType().Name} on {i.name} at local {Actions.Fmt(sled.transform.InverseTransformPoint(i.transform.position))}"));
             Harness.Log("joints: " + sled.GetComponents<ConfigurableJoint>().Length);
         });
-        Harness.Register("pull", "pull: stand at the sled's handles facing its way and press Use: the player takes the harness", Pull);
+        Harness.Register("pull", "pull [alt]: stand at the sled's handles facing its way and press Use: the player takes the harness (alt: Shift+Use, Beasts of Burden's \"pull it yourself\" with a tame nearby)", Pull);
         Harness.Register("unhitch","unhitch: press Use on the sled's handles again", Unhitch);
         Harness.Register("lead", "lead <dist> | lead stop | lead me: the beast walks to a point that far ahead of it (the sled's way), stops, or follows the player", a =>
         {
@@ -263,7 +263,7 @@ public class WinterSledHarness : BaseUnityPlugin
         P.m_lookYaw = rot;
         P.SetLookDir(fwd);
         yield return new WaitForSecondsRealtime(0.4f);
-        vagon.Interact(P, false, false);
+        vagon.Interact(P, false, a.Length > 0 && a[0] == "alt");
         yield return new WaitForSecondsRealtime(1f);
         var to = AttachedTo(vagon);
         Harness.Log(Inv($"hitched={vagon.IsAttached()} to={(to ? to.name : "-")} offset={Actions.Fmt(vagon.m_attachOffset)} detachDist={vagon.m_detachDistance:0.00} feet-to-handles={Vector3.Distance(P.transform.position + vagon.m_attachOffset, vagon.m_attachPoint.position):0.00}"));

@@ -16,7 +16,8 @@
 
   <PropertyGroup>
     <ValheimDir Condition="'$(ValheimDir)' == ''">$(VALHEIM_DIR)</ValheimDir>
-    <ManagedDir Condition="Exists('$(ValheimDir)/valheim_server_Data/Managed')">$(ValheimDir)/valheim_server_Data/Managed</ManagedDir>
+    <ManagedDir Condition="Exists('$(ValheimDir)/valheim.app/Contents/Resources/Data/Managed')">$(ValheimDir)/valheim.app/Contents/Resources/Data/Managed</ManagedDir>
+    <ManagedDir Condition="'$(ManagedDir)' == '' And Exists('$(ValheimDir)/valheim_server_Data/Managed')">$(ValheimDir)/valheim_server_Data/Managed</ManagedDir>
     <ManagedDir Condition="'$(ManagedDir)' == ''">$(ValheimDir)/valheim_Data/Managed</ManagedDir>
     <BepInExDir>$(ValheimDir)/BepInEx</BepInExDir>
     <!-- where valheim-dev-harness is checked out (built with `mise run build` there) -->
