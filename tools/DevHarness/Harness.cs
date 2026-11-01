@@ -633,6 +633,27 @@ namespace WinterSledDevHarness
                         Log($"placed {n} {prefab} from {origin} at y {h0 + 0.05f:0.00}");
                     }
                     break;
+                case "piece":
+                    {
+                        // piece <prefab> [dist]: a building piece on the ground in front of the player, facing them, built
+                        // by them (spawn lifts things 0.3 m for the sled's sake: a piece there has no support and breaks)
+                        float dist = a.Length > 2 ? F(a[2]) : 4f;
+                        var fwd = Vector3.ProjectOnPlane(player.transform.forward, Vector3.up).normalized;
+                        var pos = player.transform.position + fwd * dist;
+                        if (ZoneSystem.instance.GetSolidHeight(pos, out float h))
+                        {
+                            pos.y = h;
+                        }
+                        var go = Instantiate(ZNetScene.instance.GetPrefab(a[1]), pos, Quaternion.LookRotation(-fwd));
+                        // SetCreator(long), by reflection: its PlatformUserID overload needs an assembly the harness doesn't reference
+                        var piece = go.GetComponent<Piece>();
+                        if (piece != null)
+                        {
+                            typeof(Piece).GetMethod("SetCreator", new[] { typeof(long) })?.Invoke(piece, new object[] { player.GetPlayerID() });
+                        }
+                        Log($"{a[1]} built at {pos}");
+                    }
+                    break;
                 case "count":
                     {
                         float r = F(a[2]);
