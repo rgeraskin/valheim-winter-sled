@@ -6,14 +6,14 @@ Winter Sled: a Valheim mod (BepInEx 5 + Jötunn, C# targeting net462) that adds 
 
 ## Commands
 
-Tools come from mise (`mise.toml`: dotnet 10, blender). `VALHEIM_DIR` (mise env) points at the macOS Steam install; the csproj files read the game's `Managed/` and `BepInEx/` from there.
+Tools come from mise (`mise.toml`: dotnet 10, blender, ffmpeg). `VALHEIM_DIR` (mise env) points at the macOS Steam install; the csproj files read the game's `Managed/` and `BepInEx/` from there.
 
 - `mise run build` — Release build of `WinterSled/WinterSled.csproj`
 - `mise run test` — xunit tests (`WinterSled.Tests`, net10.0; loads the plugin and game assemblies as plain libraries)
 - single test: `dotnet test WinterSled.Tests/WinterSled.Tests.csproj -c Release --filter "FullyQualifiedName~SurfaceTests.DeepNorthPowderNeedsDepth"`
 - `mise run package` — `dist/WinterSled-<version>.zip` via `tools/package.sh` (fails if manifest and `Plugin.Version` disagree)
 - `mise run model` — regenerate `WinterSled/Resources/sled_undercarriage.obj` (CI checks it is reproducible: commit the regenerated file)
-- `mise run sounds` — write the synthesized loops to `dist/sounds/*.wav`
+- `mise run sounds` — rebuild the sounds `WinterSled/Resources/sounds/*.wav` from the recordings in `sounds/src` (ffmpeg from mise; commit the result)
 - `mise run deploy` / `harness` / `game` — copy into the local game, add the dev harness, start the game (macOS, Rosetta)
 - Build like CI: `tools/ci/fetch-deps.sh <dir>` then add `-p:ValheimDir=<dir>` to build/test (mise's `VALHEIM_DIR` would otherwise win).
 - Lint workflows: `mise x aqua:rhysd/actionlint@1.7.12 -- actionlint`
@@ -27,7 +27,7 @@ Tools come from mise (`mise.toml`: dotnet 10, blender). `VALHEIM_DIR` (mise env)
 - **Config** (`SledConfig`): almost everything is server-synced (Jötunn `IsAdminOnly`), so all peers simulate the same sled; `LiveSettings` applies changes (mass, recipe, crash speeds) to the prefab and built sleds. The recipe switches to `SeasonalRequirements` when a seasons mod is present.
 - **Soft dependencies** (`SeasonsCompat.cs`: `SeasonsCompat`, `SeasonalityCompat`; `DraftAnimalsCompat.cs`): pure reflection, no assembly references; must degrade to "not installed" if those mods change. Draft Animals fits only the vanilla `Cart` (in a `ZNetScene.Awake` postfix, after the sled was cloned), so `FitSled` copies its `CartHitch` and `da_seat` bench onto the sled prefab right after it.
 - **Animal pullers**: `SledController.Puller()` finds the puller through any joint on the sled (vanilla `Vagon` joint: Beasts of Burden, OdinHorse; Draft Animals' own). `ApplyAnimalHoldBack` brakes the sled to a non-player puller's walking pace (`Character.m_currentVel`, not its shoved body velocity); `AnimalHitch` (every `Vagon`, carts too) keeps an animal's hitch point at the mod's height above the ground under it; players are untouched.
-- **Audio** (`SledAudio`): loops synthesized at startup (`Synthesize` is deterministic and tested), crossfaded per surface plus wind; the cart's wheel sound is muted.
+- **Audio** (`SledAudio`): recorded loops (Freesound; credits in `sounds/SOURCES.md` and README, CC BY ones must stay credited) embedded as WAVs, one per surface (`LoopFor`) plus wind, plain loops, each an even texture of short grains rebuilt by `sounds/build_sounds.py` (a loop cut straight from a recording has an audible pattern; random stretches at play time sound uneven), crossfaded as the surface changes; the cart's wheel sound is muted.
 - **Text**: `Translations.cs` holds every game language × every key; tests fail if a `$wintersled_*`/`$piece_wintersled*` token used in `src/` has no row, or a language misses a text. Adding a key means adding it to all 35 languages.
 
 ## Testing in game

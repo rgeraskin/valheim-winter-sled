@@ -1,5 +1,6 @@
 [tools]
 blender = "5.2.2"
+"conda:ffmpeg" = "9.0.2"
 dotnet = "10"
 
 [env]
@@ -27,12 +28,12 @@ description = "Build the plugin"
 run = "dotnet build WinterSled/WinterSled.csproj -c Release"
 
 [tasks.test]
-description = "Unit tests (surface rules, hauling, recipes, seasons, translations, sound synthesis)"
+description = "Unit tests (surface rules, hauling, recipes, seasons, translations, sound loops)"
 run = "dotnet test WinterSled.Tests/WinterSled.Tests.csproj -c Release"
 
 [tasks.sounds]
-description = "Write the synthesized runner sounds to dist/sounds/*.wav to listen to"
-run = "WINTERSLED_SOUNDS=$PWD/dist/sounds dotnet test WinterSled.Tests/WinterSled.Tests.csproj -c Release --filter WritesLoopsToListenTo && ls dist/sounds"
+description = "Rebuild the sound loops (WinterSled/Resources/sounds/*.wav) from the recordings in sounds/src"
+run = "python3 sounds/build_sounds.py"
 
 [tasks.deploy]
 description = "Build and copy the plugin into the game's BepInEx/plugins"

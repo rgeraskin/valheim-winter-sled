@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.2
+
+- New sounds: real recordings instead of synthesized noise, and more of them. The runners hiss on snow, plough heavier through Deep North powder, rasp on ice, grind on frozen ground and stone, rumble over wooden floors (their own sound now) and drag through dirt; a rider at speed hears the wind rush past. Each loop is rebuilt from short grains of its recording: the recording's tone, steady, with nothing in it you'd hear repeat. Recordings from Freesound by Nox_Sound, alexarje, Percy Duke, brunoboselli, papimre and FunWithSound (credits and licenses in the README).
+- Dirt, frozen ground and stone grind 3.5 dB quieter than the snow's hiss, which they drowned out; at the default `SoundVolume` the sled now sounds about as loud as the vanilla cart on snow and ice, a little quieter on wood and quieter still on earth and stone.
+- A sled that stops and goes again no longer starts its sound from the same spot each time.
+
 ## 0.2.1
 
 - Description update only; the mod itself is unchanged. Beasts of Burden 1.0.8 is tested with the sled: an animal no longer leaves its hitch settings behind for the next player, and holding Shift (the alternate placement key) while pressing E at the handles lets you take the sled yourself with a tame animal nearby. The README and the mod page say so, and no longer list "the closest tame animal gets hitched rather than you" as a quirk.

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -75,19 +76,27 @@ namespace WinterSled.Tests
 
     public class AudioTests
     {
-        private static float[] Loop(SledAudio.Loop loop) => SledAudio.Synthesize(loop);
+        public static IEnumerable<object[]> Loops => Enum.GetNames(typeof(SledAudio.Loop)).Select(l => new object[] { l });
+
+        private static float[] Loop(string loop) => SledAudio.LoadLoop((SledAudio.Loop)Enum.Parse(typeof(SledAudio.Loop), loop));
 
         [Theory]
-        [InlineData("Snow")]
-        [InlineData("Ice")]
-        [InlineData("Ground")]
-        [InlineData("Frozen")]
-        [InlineData("Wind")]
-        public void LoopsAreNormalisedAndSeamless(string loop)
+        [MemberData(nameof(Loops))]
+        public void LoopsAreEmbeddedAtTheSameLoudness(string loop)
         {
-            var data = Loop((SledAudio.Loop)Enum.Parse(typeof(SledAudio.Loop), loop));
+            var data = Loop(loop);
+            // build_sounds.py: -18 dBFS RMS, peaks softly limited below 0.95 (the limiting takes off a little)
+            double rms = 20 * Math.Log10(Math.Sqrt(data.Average(s => (double)s * s)));
+            Assert.InRange(rms, -19.0, -17.5);
+            Assert.True(data.Max(Math.Abs) <= 0.951f, "a peak goes past the limit");
+        }
+
+        [Theory]
+        [MemberData(nameof(Loops))]
+        public void LoopsAreSeamless(string loop)
+        {
+            var data = Loop(loop);
             Assert.Equal((int)(SledAudio.Rate * SledAudio.LoopSeconds), data.Length);
-            Assert.Equal(0.8f, data.Max(Math.Abs), 3);
             // the jump from the last sample back to the first is no bigger than the loop's own steps
             float biggestStep = 0f;
             for (int i = 1; i < data.Length; i++)
@@ -97,51 +106,38 @@ namespace WinterSled.Tests
             Assert.True(Math.Abs(data[0] - data[data.Length - 1]) <= biggestStep, "the loop point clicks");
         }
 
-        /// <summary>WINTERSLED_SOUNDS=dir writes every loop there as a WAV to listen to (mise run sounds).</summary>
-        [Fact]
-        public void WritesLoopsToListenTo()
+        [Theory]
+        [MemberData(nameof(Loops))]
+        public void LoopsAreSteady(string loop)
         {
-            string dir = Environment.GetEnvironmentVariable("WINTERSLED_SOUNDS");
-            if (string.IsNullOrEmpty(dir))
+            // build_sounds.py evens the recording out: no quarter second much louder or quieter than the rest,
+            // or the loop would change by itself and be heard repeating
+            var data = Loop(loop);
+            int frame = SledAudio.Rate / 4;
+            var db = Enumerable.Range(0, data.Length / frame)
+                .Select(f => 10 * Math.Log10(data.Skip(f * frame).Take(frame).Average(s => (double)s * s)))
+                .ToArray();
+            double mean = db.Average();
+            Assert.True(db.All(d => Math.Abs(d - mean) < 3.0), $"{loop}: {db.Min() - mean:0.0} .. {db.Max() - mean:+0.0} dB");
+        }
+
+        [Fact]
+        public void EverySurfaceButWaterHasALoop()
+        {
+            foreach (Surface surface in Enum.GetValues(typeof(Surface)))
             {
-                return;
+                Assert.True(SledAudio.LoopFor(surface).HasValue == (surface != Surface.Water), surface.ToString());
             }
-            Directory.CreateDirectory(dir);
+        }
+
+        [Fact]
+        public void EveryRunnerLoopPlaysSomewhere()
+        {
+            var used = Enum.GetValues(typeof(Surface)).Cast<Surface>().Select(SledAudio.LoopFor).Where(l => l.HasValue).Select(l => l.Value).ToHashSet();
             foreach (SledAudio.Loop loop in Enum.GetValues(typeof(SledAudio.Loop)))
             {
-                // three times over, so the loop point can be heard
-                var one = Loop(loop);
-                var data = one.Concat(one).Concat(one).ToArray();
-                using var w = new BinaryWriter(File.Create(Path.Combine(dir, $"sled_{loop.ToString().ToLowerInvariant()}.wav")));
-                const int rate = 22050;
-                w.Write("RIFF".ToCharArray()); w.Write(36 + data.Length * 2); w.Write("WAVE".ToCharArray());
-                w.Write("fmt ".ToCharArray()); w.Write(16); w.Write((short)1); w.Write((short)1); w.Write(rate); w.Write(rate * 2); w.Write((short)2); w.Write((short)16);
-                w.Write("data".ToCharArray()); w.Write(data.Length * 2);
-                foreach (float f in data)
-                {
-                    w.Write((short)(Math.Clamp(f, -1f, 1f) * short.MaxValue));
-                }
+                Assert.True(loop == SledAudio.Loop.Wind || used.Contains(loop), loop.ToString());
             }
-        }
-
-        [Fact]
-        public void LoopsAreTheSameEveryRun()
-        {
-            Assert.Equal(Loop(SledAudio.Loop.Snow), Loop(SledAudio.Loop.Snow));
-        }
-
-        [Fact]
-        public void IceHissesHigherThanSnowAndSnowHigherThanGround()
-        {
-            // zero crossings per second: a rough brightness
-            static int Crossings(float[] d) => Enumerable.Range(1, d.Length - 1).Count(i => (d[i] >= 0) != (d[i - 1] >= 0));
-            int ice = Crossings(Loop(SledAudio.Loop.Ice));
-            int snow = Crossings(Loop(SledAudio.Loop.Snow));
-            int ground = Crossings(Loop(SledAudio.Loop.Ground));
-            int frozen = Crossings(Loop(SledAudio.Loop.Frozen));
-            Assert.True(ice > snow, $"ice {ice} vs snow {snow}");
-            Assert.True(snow > ground, $"snow {snow} vs ground {ground}");
-            Assert.True(frozen > ground, $"frozen {frozen} vs ground {ground}");
         }
     }
 }

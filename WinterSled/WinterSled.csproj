@@ -55,6 +55,8 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Resources/sled_undercarriage.obj" LogicalName="WinterSled.sled_undercarriage.obj" />
+    <!-- the sound loops, written by sounds/build_sounds.py -->
+    <EmbeddedResource Include="Resources/sounds/*.wav" LogicalName="WinterSled.sounds.%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>

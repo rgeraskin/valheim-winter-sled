@@ -19,7 +19,7 @@ While you pull it, an icon shows what the runners are on — snow, deep snow, ic
 
 ## Sounds
 
-The runners hiss on snow, sing on ice, scrape on frozen ground and grumble on dirt, and at speed the wind joins in. The volume is in the settings, for those who prefer to sled in dignified silence.
+The runners hiss on snow, crunch through deep powder, rasp on ice, grind on frozen ground and stone, rumble over wooden floors and drag through dirt, and at speed the wind joins in: real recordings, not synthesized noise (credits below). The volume is in the settings, for those who prefer to sled in dignified silence.
 
 ## Seasons
 
@@ -99,12 +99,13 @@ Building, tests, the in-game test harness and releasing: [DEVELOPMENT.md](DEVELO
 ## Credits
 
 - Inspired by [Shield Sledding](https://thunderstore.io/c/valheim/p/ModdedWolf/ShieldSledding/) (ModdedWolf), whose surface rules (ice by name, Deep North powder depth) this mod follows.
+- Sounds, recorded by Freesound users: snow and powder by Nox_Sound ([Snowboard_Slide_Loop_Mono_02](https://freesound.org/s/612664/) and [_01](https://freesound.org/s/612665/), CC0), ice by alexarje ([Sledging (SoundAction 359)](https://freesound.org/s/863338/), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)), frozen ground and stone by Percy Duke ([Ice Block - Sliding, Crunching, Scraping](https://freesound.org/s/420634/), [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)), ground by brunoboselli ([Dragging Kayak](https://freesound.org/s/488335/), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)), wood floors by papimre ([Wood Plank Pushed On Wood Floor Long](https://freesound.org/s/710621/), CC0) and wind by FunWithSound ([Car Strong Wind Noise](https://freesound.org/s/439242/), CC0). Each loop is rebuilt from short grains of its recording, so it keeps the recording's tone but stays even and has nothing in it you'd hear repeat ([details](https://github.com/rgeraskin/valheim-winter-sled/blob/master/sounds/SOURCES.md)).
 - [Valheim World Editor](https://github.com/Shuiei/valheim-world-editor) built the test courses: snowy slopes, a strip of bare frozen ground, a flat pad for coasting tests, all edited live in the test world. It helped a lot: every surface could be tested under the same, repeatable conditions. Its release script is also the base of this mod's publishing to the mod sites.
 
 ## Made with AI
 
-This mod — code, 3D model, sounds, translations, tests and this text — was made entirely with AI, and tested in the game.
+This mod — code, 3D model, translations, tests and this text — was made entirely with AI, and tested in the game. The sounds are real recordings by the people credited above, picked by ear and turned into loops by AI.
 
 ## License
 
-MIT, see [LICENSE](LICENSE).
+MIT, see [LICENSE](LICENSE). The sound recordings keep their own licenses (CC0, CC BY), see Credits.

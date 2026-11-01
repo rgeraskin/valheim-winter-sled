@@ -345,6 +345,22 @@ namespace WinterSledDevHarness
                 case "spawn":
                     SpawnSled(a.Length > 1 ? F(a[1]) : 4f, a.Length > 2 ? a[2] : SledBuilder.PrefabName, a.Length > 3 && a[3] == "keep");
                     break;
+                case "hoe":
+                    {
+                        // one of the hoe's ground edits (path_v2, paved_road_v2...) at the player's feet: the zone gets the
+                        // terrain object a world editor needs before it can save ground edits there
+                        string name = a.Length > 1 ? a[1] : "path_v2";
+                        var hoe = ObjectDB.instance.GetItemPrefab("Hoe")?.GetComponent<ItemDrop>()?.m_itemData.m_shared.m_buildPieces;
+                        var piece = hoe?.m_pieces.FirstOrDefault(p => p != null && p.name == name);
+                        if (piece == null)
+                        {
+                            Log("! no hoe piece " + name + "; there are: " + string.Join(", ", hoe?.m_pieces.Where(p => p != null).Select(p => p.name) ?? new string[0]));
+                            break;
+                        }
+                        Instantiate(piece, player.transform.position, Quaternion.identity);
+                        Log($"{name} at {player.transform.position}");
+                    }
+                    break;
                 case "attach":
                     yield return AttachToSled();
                     break;
@@ -655,7 +671,7 @@ namespace WinterSledDevHarness
                     break;
                 case "clearsleds":
                     {
-                        float r = F(a[1]);
+                        float r = a.Length > 1 ? F(a[1]) : 50f;
                         int n = 0;
                         foreach (var v in FindObjectsByType<Vagon>(FindObjectsSortMode.None))
                         {
@@ -683,6 +699,70 @@ namespace WinterSledDevHarness
                         {
                             Log("no setting " + a[1]);
                         }
+                    }
+                    break;
+                case "audiodiag":
+                    // why a sled's loop isn't playing: each of its AudioSources, its clip and the listener
+                    if (m_sled)
+                    {
+                        foreach (var s in m_sled.GetComponents<AudioSource>())
+                        {
+                            var c = s.clip;
+                            Log($"src enabled={s.enabled} active={s.isActiveAndEnabled} playing={s.isPlaying} vol={s.volume:0.00} mute={s.mute} time={s.time:0.00} timeSamples={s.timeSamples} mixer={(s.outputAudioMixerGroup ? s.outputAudioMixerGroup.name : "-")} clip={(c ? $"{c.name} len={c.length:0.00} samples={c.samples} ch={c.channels} hz={c.frequency} state={c.loadState} ready={c.isReadyToPlay}" : "null")}");
+                        }
+                    }
+                    Log($"listeners={FindObjectsByType<AudioListener>(FindObjectsSortMode.None).Length} paused={AudioListener.pause} listenerVol={AudioListener.volume:0.00} cfg={AudioSettings.GetConfiguration().speakerMode}/{AudioSettings.outputSampleRate}");
+                    break;
+                case "loudness":
+                    // loudness: every AudioSource on the harness's sled or cart (wheels too) with how loud its clip is
+                    // and the volume it plays at now; clip RMS x volume is what reaches the SFX mixer
+                    if (m_sled)
+                    {
+                        var getData = typeof(AudioClip).GetMethod("GetData", new[] { typeof(float[]), typeof(int) });
+                        foreach (var s in m_sled.GetComponentsInChildren<AudioSource>(true))
+                        {
+                            var c = s.clip;
+                            string rms = "-";
+                            if (c && c.samples > 0)
+                            {
+                                var buf = new float[c.samples * c.channels];
+                                if (c.loadState == AudioDataLoadState.Loaded && (bool)getData.Invoke(c, new object[] { buf, 0 }))
+                                {
+                                    double sum = 0;
+                                    foreach (var v in buf)
+                                    {
+                                        sum += v * v;
+                                    }
+                                    rms = $"{20 * Math.Log10(Math.Sqrt(sum / buf.Length) + 1e-9):0.0}dB";
+                                }
+                                else
+                                {
+                                    rms = "unreadable(" + c.loadState + ")";
+                                }
+                            }
+                            Log($"loud {s.gameObject.name} playing={s.isPlaying} vol={s.volume:0.00} pitch={s.pitch:0.00} spatial={s.spatialBlend:0.0} rolloff={s.rolloffMode} {s.minDistance:0}-{s.maxDistance:0}m mixer={(s.outputAudioMixerGroup ? s.outputAudioMixerGroup.name : "-")} clip={(c ? c.name : "null")} clipRms={rms} comps={string.Join(",", s.GetComponents<Component>().Select(x => x.GetType().Name))}");
+                        }
+                    }
+                    break;
+                case "audiopitch":
+                    // audiopitch <p|off>: every sled loop at pitch p, not the speed's
+                    SledAudio.s_pitchOverride = a[1] == "off" ? float.NaN : F(a[1]);
+                    Log($"pitch override {SledAudio.s_pitchOverride}");
+                    break;
+                case "recaudio":
+                    {
+                        // recaudio <seconds> <name>: what the game plays (the listener's mix) into <harness dir>/<name>.wav
+                        var listener = FindObjectsByType<AudioListener>(FindObjectsSortMode.None).FirstOrDefault();
+                        if (listener == null)
+                        {
+                            Log("! no audio listener");
+                            break;
+                        }
+                        var rec = listener.gameObject.AddComponent<AudioRecorder>();
+                        yield return new WaitForSecondsRealtime(F(a[1]));
+                        string path = Path.Combine(m_dir, a[2] + ".wav");
+                        Log($"recorded {rec.Save(path):0.0} s to {path}");
+                        Destroy(rec);
                     }
                     break;
                 case "audio":
@@ -1029,5 +1109,51 @@ namespace WinterSledDevHarness
         }
 
         private static void s_instanceLog(string msg) => Harness.LogStatic(msg);
+    }
+
+    /// <summary>Records the mix the listener hears (on the audio thread) for the harness's recaudio.</summary>
+    internal class AudioRecorder : MonoBehaviour
+    {
+        private readonly List<float> m_data = new List<float>();
+        private int m_channels = 2;
+
+        private void OnAudioFilterRead(float[] data, int channels)
+        {
+            lock (m_data)
+            {
+                m_channels = channels;
+                m_data.AddRange(data);
+            }
+        }
+
+        public float Save(string path)
+        {
+            float[] data;
+            lock (m_data)
+            {
+                data = m_data.ToArray();
+            }
+            int rate = AudioSettings.outputSampleRate;
+            using (var w = new BinaryWriter(File.Create(path)))
+            {
+                w.Write("RIFF".ToCharArray());
+                w.Write(36 + data.Length * 2);
+                w.Write("WAVEfmt ".ToCharArray());
+                w.Write(16);
+                w.Write((short)1);
+                w.Write((short)m_channels);
+                w.Write(rate);
+                w.Write(rate * m_channels * 2);
+                w.Write((short)(m_channels * 2));
+                w.Write((short)16);
+                w.Write("data".ToCharArray());
+                w.Write(data.Length * 2);
+                foreach (float f in data)
+                {
+                    w.Write((short)Mathf.Clamp(f * 32767f, -32768f, 32767f));
+                }
+            }
+            return data.Length / (float)m_channels / rate;
+        }
     }
 }

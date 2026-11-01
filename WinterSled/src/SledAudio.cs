@@ -1,27 +1,50 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 namespace WinterSled
 {
     /// <summary>
-    /// Runner sounds, synthesized at startup from filtered noise (the game has no sled sounds to borrow,
-    /// and the cart's wheel creak is the wrong noise): a soft crunching hiss on snow, a thin singing hiss
-    /// on ice, a low gritty scrape on ground (brighter when frozen), and wind at speed. Each surface has
-    /// its own loop; they crossfade as the surface changes, louder and higher as the sled goes faster.
+    /// Runner sounds: a loop per surface (the game has no sled sounds to borrow, and the cart's wheel creak is the
+    /// wrong noise) and wind at speed for a rider. Each loop is a steady texture rebuilt from a recording by
+    /// sounds/build_sounds.py (short grains from random places in it: its tone without anything to recognize when
+    /// it repeats) and embedded in the plugin; sounds/SOURCES.md says whose the recordings are. The loops crossfade
+    /// as the surface changes, louder and a little higher as the sled goes faster.
     /// </summary>
     internal class SledAudio : MonoBehaviour
     {
-        internal const int Rate = 22050;
-        // long enough that the loop doesn't make a rhythm of its own
-        internal const float LoopSeconds = 5f;
+        // keep in sync with sounds/build_sounds.py
+        internal const int Rate = 24000;
+        internal const float LoopSeconds = 8f;
+        // powder is the snow made heavier (build_sounds.py) and played lower
+        private const float PowderPitch = 0.85f;
         // the sled's speed rises and falls with every step of whoever pulls it: the sound follows it smoothed
         private const float SpeedSmoothing = 0.4f;
 
-        internal enum Loop { Snow, Ice, Ground, Frozen, Wind }
+        internal enum Loop { Snow, Powder, Ice, Ground, Frozen, Wood, Wind }
+
+        /// <summary>
+        /// How loud each loop plays next to the others (1: as built, every loop is leveled alike): earth and rock
+        /// grind, and at the same level as the snow's hiss they stood out, so they are 3.5 dB down.
+        /// </summary>
+        internal static float Gain(Loop loop)
+        {
+            switch (loop)
+            {
+                case Loop.Ground:
+                case Loop.Frozen:
+                    return 0.668f; // -3.5 dB
+                default:
+                    return 1f;
+            }
+        }
 
         private static readonly Dictionary<Loop, AudioClip> s_clips = new Dictionary<Loop, AudioClip>();
         private static readonly System.Reflection.MethodInfo s_setData = typeof(AudioClip).GetMethod("SetData", new[] { typeof(float[]), typeof(int) });
+
+        // the dev harness's A/B test: every loop at this pitch instead of the speed's (NaN: off)
+        internal static float s_pitchOverride = float.NaN;
 
         private readonly Dictionary<Loop, AudioSource> m_sources = new Dictionary<Loop, AudioSource>();
         private SledController m_sled;
@@ -51,8 +74,6 @@ namespace WinterSled
                 source.dopplerLevel = 0f;
                 source.volume = 0f;
                 source.outputAudioMixerGroup = mixer;
-                // start each loop at a different point, so they never phase together
-                source.time = UnityEngine.Random.Range(0f, LoopSeconds);
                 m_sources[loop] = source;
             }
         }
@@ -70,25 +91,7 @@ namespace WinterSled
             var surface = m_sled.ShownSurface;
             bool touching = m_sled.Touching;
 
-            Loop? active = null;
-            switch (surface)
-            {
-                case Surface.Snow:
-                case Surface.Powder:
-                    active = Loop.Snow;
-                    break;
-                case Surface.Ice:
-                    active = Loop.Ice;
-                    break;
-                case Surface.Ground:
-                case Surface.Wood:
-                case Surface.Stone:
-                    active = Loop.Ground;
-                    break;
-                case Surface.FrozenGround:
-                    active = Loop.Frozen;
-                    break;
-            }
+            Loop? active = LoopFor(surface);
 
             float dt = Time.deltaTime;
             foreach (var pair in m_sources)
@@ -99,25 +102,29 @@ namespace WinterSled
                 {
                     // rushing air for a rider going fast, not for someone running with the sled in tow
                     target = m_sled.HasRider() ? Mathf.Clamp01((speed - 6f) / 10f) * 0.5f : 0f;
-                    pitch = Mathf.Lerp(0.8f, 1.3f, Mathf.Clamp01(speed / 18f));
+                    pitch = Mathf.Lerp(0.85f, 1.2f, Mathf.Clamp01(speed / 18f));
                 }
                 else if (touching && active == pair.Key && speed > 0.15f)
                 {
                     target = Mathf.Lerp(0.15f, 1f, t) * Mathf.Clamp01(speed / 0.8f);
-                    // ice only a little higher with speed: its hiss turns shrill quickly
-                    pitch = surface == Surface.Ice ? Mathf.Lerp(0.95f, 1.08f, t) : Mathf.Lerp(0.85f, 1.25f, t);
-                    if (surface == Surface.Powder)
+                    // a recording bends less than noise before it sounds wrong; ice least, its hiss turns shrill quickly
+                    pitch = surface == Surface.Ice ? Mathf.Lerp(0.95f, 1.08f, t) : Mathf.Lerp(0.9f, 1.15f, t);
+                    if (pair.Key == Loop.Powder)
                     {
-                        // ploughing powder is duller and louder
-                        pitch *= 0.8f;
-                        target = Mathf.Min(1f, target * 1.2f);
+                        pitch *= PowderPitch;
                     }
                 }
+                if (!float.IsNaN(s_pitchOverride))
+                {
+                    pitch = s_pitchOverride;
+                }
                 var source = pair.Value;
-                source.volume = Mathf.MoveTowards(source.volume, target * master, dt * 2.5f);
+                source.volume = Mathf.MoveTowards(source.volume, target * Gain(pair.Key) * master, dt * 2.5f);
                 source.pitch = Mathf.MoveTowards(source.pitch, pitch, dt * 2f);
                 if (source.volume > 0.001f && !source.isPlaying)
                 {
+                    // Stop() rewinds to the loop's start: every stop and go would begin with the same second
+                    source.timeSamples = UnityEngine.Random.Range(0, source.clip.samples);
                     source.Play();
                 }
                 else if (source.volume <= 0.001f && source.isPlaying)
@@ -142,101 +149,111 @@ namespace WinterSled
             return string.Join(" ", parts);
         }
 
-        // ------------------------------------------------------------------ synthesis
+        /// <summary>The loop that plays on a surface; none on water, where the sled floats in silence.</summary>
+        internal static Loop? LoopFor(Surface surface)
+        {
+            switch (surface)
+            {
+                case Surface.Snow:
+                    return Loop.Snow;
+                case Surface.Powder:
+                    return Loop.Powder;
+                case Surface.Ice:
+                    return Loop.Ice;
+                case Surface.Ground:
+                    return Loop.Ground;
+                case Surface.Wood:
+                    return Loop.Wood;
+                // hard and gritty, both: rock and stone floors grind like frozen earth
+                case Surface.Stone:
+                case Surface.FrozenGround:
+                    return Loop.Frozen;
+                default:
+                    return null;
+            }
+        }
+
+        // ------------------------------------------------------------------ the recordings
 
         private static AudioClip Clip(Loop loop)
         {
             if (!s_clips.TryGetValue(loop, out var clip) || clip == null)
             {
-                clip = AudioClip.Create("wintersled_" + loop.ToString().ToLowerInvariant(), (int)(Rate * LoopSeconds), 1, Rate, false);
+                var data = LoadLoop(loop);
+                clip = AudioClip.Create("wintersled_" + loop.ToString().ToLowerInvariant(), data.Length, 1, Rate, false);
                 // the float[] overload, by reflection: Unity 6 adds a Span overload that net462 can't compile against
-                s_setData.Invoke(clip, new object[] { Synthesize(loop), 0 });
+                s_setData.Invoke(clip, new object[] { data, 0 });
                 s_clips[loop] = clip;
             }
             return clip;
         }
 
-        /// <summary>Filtered noise for one loop, its ends crossfaded so it repeats without a click.</summary>
-        internal static float[] Synthesize(Loop loop)
+        internal static string ResourceName(Loop loop)
         {
-            int n = (int)(Rate * LoopSeconds);
-            int fade = Rate / 2;
-            var rng = new System.Random(1000 + (int)loop);
-            var raw = new float[n + fade];
-            float lp1 = 0f, lp2 = 0f, lp3 = 0f, lp4 = 0f, crackle = 0f, wobble = 0f;
-            for (int i = 0; i < raw.Length; i++)
+            return "WinterSled.sounds.sled_" + loop.ToString().ToLowerInvariant() + ".wav";
+        }
+
+        /// <summary>One embedded loop's samples (16-bit mono PCM at <see cref="Rate"/>, as build_sounds.py writes it).</summary>
+        internal static float[] LoadLoop(Loop loop)
+        {
+            string name = ResourceName(loop);
+            using (var stream = typeof(SledAudio).Assembly.GetManifestResourceStream(name))
             {
-                float white = (float)(rng.NextDouble() * 2.0 - 1.0);
-                float sample;
-                switch (loop)
+                if (stream == null)
                 {
-                    case Loop.Snow:
-                        // soft hiss (low-passed noise) with crunchy crackles
-                        lp1 += (white - lp1) * 0.18f;
-                        if (rng.NextDouble() < 0.0025)
-                        {
-                            crackle = 0.9f * (float)(rng.NextDouble() * 0.6 + 0.4);
-                        }
-                        crackle *= 0.985f;
-                        sample = lp1 * 0.55f + white * crackle * 0.6f;
-                        break;
-                    case Loop.Ice:
-                        // iron scraping ice: a hard band of hiss with a grit of tiny ticks (ice crystals under the
-                        // iron), over a rasp — a lower band, slightly overdriven — that gives it the scrape; no tone
-                        // and not the harshest highs (those whistled), no sparse bursts (those stuttered)
-                        lp1 += (white - lp1) * 0.6f;
-                        lp2 += (lp1 - lp2) * 0.06f;
-                        if (rng.NextDouble() < 0.035)
-                        {
-                            crackle = (float)(rng.NextDouble() * 0.5 + 0.5);
-                        }
-                        crackle *= 0.65f;
-                        lp3 += (white - lp3) * 0.12f;
-                        lp4 += (lp3 - lp4) * 0.02f;
-                        float rasp = (float)Math.Tanh((lp3 - lp4) * 10f) * 0.6f;
-                        sample = (lp1 - lp2) + lp1 * crackle * 1.7f + rasp;
-                        break;
-                    case Loop.Ground:
-                    case Loop.Frozen:
-                        // a low, grinding rumble (twice low-passed noise) with grit; frozen ground is brighter
-                        bool frozen = loop == Loop.Frozen;
-                        lp1 += (white - lp1) * (frozen ? 0.12f : 0.05f);
-                        lp2 += (lp1 - lp2) * (frozen ? 0.25f : 0.12f);
-                        if (rng.NextDouble() < (frozen ? 0.006 : 0.004))
-                        {
-                            crackle = (float)(rng.NextDouble() * 0.7 + 0.3);
-                        }
-                        crackle *= frozen ? 0.93f : 0.9f;
-                        sample = lp2 * (frozen ? 2.2f : 3.2f) + white * crackle * (frozen ? 0.45f : 0.35f);
-                        break;
-                    default:
-                        // wind: slow-moving band of noise
-                        lp1 += (white - lp1) * 0.03f;
-                        wobble += 1f / Rate;
-                        sample = lp1 * (1.6f + 0.6f * Mathf.Sin(wobble * 2.1f) * Mathf.Sin(wobble * 0.7f));
-                        break;
+                    throw new FileNotFoundException("embedded resource missing", name);
                 }
-                raw[i] = sample;
+                return ReadWav(stream, name);
             }
-            var data = new float[n];
-            Array.Copy(raw, data, n);
-            for (int i = 0; i < fade; i++)
+        }
+
+        internal static float[] ReadWav(Stream stream, string name)
+        {
+            using (var reader = new BinaryReader(stream))
             {
-                // the extra tail fades into the head: the loop point is seamless, and equal-power, so the level
-                // doesn't dip mid-fade (two unrelated noises added linearly lose a third of it)
-                float w = (float)i / fade;
-                data[i] = raw[n + i] * Mathf.Cos(w * Mathf.PI / 2f) + raw[i] * Mathf.Sin(w * Mathf.PI / 2f);
+                if (new string(reader.ReadChars(4)) != "RIFF")
+                {
+                    throw new InvalidDataException(name + " is not a WAV file");
+                }
+                reader.ReadInt32();
+                if (new string(reader.ReadChars(4)) != "WAVE")
+                {
+                    throw new InvalidDataException(name + " is not a WAV file");
+                }
+                bool format = false;
+                while (stream.Position + 8 <= stream.Length)
+                {
+                    string id = new string(reader.ReadChars(4));
+                    int size = reader.ReadInt32();
+                    if (id == "fmt ")
+                    {
+                        short pcm = reader.ReadInt16(), channels = reader.ReadInt16();
+                        int rate = reader.ReadInt32();
+                        reader.ReadBytes(6);
+                        short bits = reader.ReadInt16();
+                        if (pcm != 1 || channels != 1 || rate != Rate || bits != 16)
+                        {
+                            throw new InvalidDataException($"{name}: {channels} ch {rate} Hz {bits}-bit (format {pcm}), expected 16-bit mono PCM at {Rate} Hz");
+                        }
+                        reader.ReadBytes(size - 16);
+                        format = true;
+                    }
+                    else if (id == "data" && format)
+                    {
+                        var data = new float[size / 2];
+                        for (int i = 0; i < data.Length; i++)
+                        {
+                            data[i] = reader.ReadInt16() / 32768f;
+                        }
+                        return data;
+                    }
+                    else
+                    {
+                        reader.ReadBytes(size + (size & 1));
+                    }
+                }
+                throw new InvalidDataException(name + " has no audio data");
             }
-            float peak = 1e-4f;
-            foreach (var s in data)
-            {
-                peak = Mathf.Max(peak, Mathf.Abs(s));
-            }
-            for (int i = 0; i < n; i++)
-            {
-                data[i] *= 0.8f / peak;
-            }
-            return data;
         }
     }
 }

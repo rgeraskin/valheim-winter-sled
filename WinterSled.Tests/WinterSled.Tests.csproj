@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- Unit tests of the sled's rules that don't need the game running (surfaces, hauling, recipes,
-       seasons, translations, synthesized sound). The plugin and the game's assemblies load into .NET
+       seasons, translations, sound loops). The plugin and the game's assemblies load into .NET
        as plain libraries; nothing here touches Unity's native side. -->
 
   <PropertyGroup>

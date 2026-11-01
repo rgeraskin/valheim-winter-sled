@@ -35,6 +35,12 @@ public class WinterSledHarness : BaseUnityPlugin
             sled = Instantiate(ZNetScene.instance.GetPrefab(a.Length > 1 ? a[1] : SledBuilder.PrefabName), pos, Quaternion.LookRotation(fwd));
             Harness.Log(Inv($"{sled.name} at {Actions.Fmt(pos)}"));
         });
+        Harness.Register("sledaudio", "sledaudio: the sled's surface and speed, and each sound loop's volume, pitch and whether it plays (▶)", a =>
+        {
+            var au = sled ? sled.GetComponent<SledAudio>() : null;
+            var sc = sled ? sled.GetComponent<SledController>() : null;
+            Harness.Log(au ? Inv($"audio surface={sc.ShownSurface} speed={sc.Speed:0.0} touching={sc.Touching}: {au.Describe()}") : "no sled audio");
+        });
         Harness.Register("findsled", "findsled [r=30]: take the nearest vehicle (Vagon) as the sled", a =>
         {
             var v = Actions.Nearest<Vagon>(Opt(a, 0, 30f));
