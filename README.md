@@ -11,9 +11,13 @@ It rides on runners instead of wheels, so how it moves depends on what is under 
 
 That makes it the cart's winter rival: the cart wins on grass, the sled wins in snow. To keep things fair, **wheels now sink in snow** — the cart had it too easy (you can turn that off if you feel sorry for it).
 
+![The sled hauled through the Deep North](https://raw.githubusercontent.com/rgeraskin/valheim-winter-sled/master/package/gallery/4-deep-north.jpg)
+
 The vanilla cart gets a seat too, for a passenger (no steering or brakes: someone pulls, or it rolls) — fair is fair (`CartSeat` turns it off).
 
 You can also **sit in it and ride down a snowy slope**: steer with A/D, brake with your heels on S, push off with W (or back with S, once stopped: out of a dead end), and jump to bail out. A gamepad works too: the left stick steers (the further you tilt it, the sharper the turn), a flick forward or back pushes off, and the hint shows the stick. A sled left standing stays put on a slope: its runners settle into the snow. A sled you let go of at full speed does not: it has places to be. Odin does not cover runaway sleds.
+
+![Riding the sled downhill](https://raw.githubusercontent.com/rgeraskin/valheim-winter-sled/master/package/gallery/3-riding.jpg)
 
 While you pull it, an icon shows what the runners are on — snow, deep snow, ice, frozen ground, wood, stone or ground — in case your legs haven't told you already.
 
@@ -24,6 +28,8 @@ The runners hiss on snow, crunch through deep powder, rasp on ice, grind on froz
 ## Seasons
 
 Plays along with [Seasons](https://thunderstore.io/c/valheim/p/shudnal/Seasons/) (shudnal) and [Seasonality](https://thunderstore.io/c/valheim/p/RustyMods/Seasonality/) (RustyMods): when winter reaches the Meadows, the sled is the first to celebrate. It glides through snowy meadows, forests and plains, and frozen lakes and sea become the fastest roads in Midgard (with Seasonality, turn on its "Water Freezes" option). Neither mod is required.
+
+![The sled on the frozen sea](https://raw.githubusercontent.com/rgeraskin/valheim-winter-sled/master/package/gallery/6-frozen-sea.jpg)
 
 ## Draft animals
 
@@ -40,6 +46,8 @@ One difference from pulling it yourself: an animal keeps its own pace on any gro
 Some quirks come from those mods or the game and happen with the vanilla cart too: with Beasts of Burden a hitch doesn't survive leaving the area. On Deep North ice the game takes an animal's footing away, as it does yours: pulling the sled, it keeps its footing like you do (`SureFootedPulling`); with the vanilla cart it slips and crawls, as in vanilla.
 
 Use one cart-hitching mod at a time. Not compatible: [LetsGo](https://thunderstore.io/c/valheim/p/Hardwire99/LetsGo/) (Hardwire99) hitches carts to animals itself and its page asks to remove Beasts of Burden, so it fights the mods above over the same hitch; it isn't tested with the sled.
+
+![A deer from Draft Animals pulling the sled](https://raw.githubusercontent.com/rgeraskin/valheim-winter-sled/master/package/gallery/8-draft-animals-deer-front.jpg)
 
 ## Languages
 

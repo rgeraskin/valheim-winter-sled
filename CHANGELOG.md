@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.3
+
+- Description update only; the mod itself is unchanged. The README and the mod page show screenshots: hauling through the Deep North, riding downhill, the frozen sea with Seasons, and a deer from Draft Animals pulling the sled.
+
 ## 0.2.2
 
 - New sounds: real recordings instead of synthesized noise, and more of them. The runners hiss on snow, plough heavier through Deep North powder, rasp on ice, grind on frozen ground and stone, rumble over wooden floors (their own sound now) and drag through dirt; a rider at speed hears the wind rush past. Each loop is rebuilt from short grains of its recording: the recording's tone, steady, with nothing in it you'd hear repeat. Recordings from Freesound by Nox_Sound, alexarje, Percy Duke, brunoboselli, papimre and FunWithSound (credits and licenses in the README).
