@@ -20,7 +20,7 @@ namespace WinterSled
     {
         public const string Guid = "rgeraskin.WinterSled";
         public const string Name = "WinterSled";
-        public const string Version = "0.2.3";
+        public const string Version = "0.2.4";
 
         internal static ManualLogSource Log;
         internal static SledConfig Cfg;

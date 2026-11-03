@@ -8,6 +8,10 @@ on:
   pull_request:
   workflow_dispatch:
   workflow_call:
+  # a game update can break the plugin without any push here: build and test against the newest dedicated server
+  # every Monday (the dependency cache below is keyed by week, so this run fetches the server afresh)
+  schedule:
+    - cron: "17 6 * * 1"
 
 permissions:
   contents: read

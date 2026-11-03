@@ -165,7 +165,28 @@ public class WinterSledHarness : BaseUnityPlugin
         });
         Harness.Register("ride","ride: sit down on the sled", Ride);
         Harness.Register("mount", "mount: ride the saddled beast", Mount);
-        Harness.Register("dismount", "dismount: get off whatever the player sits on", a => P.AttachStop());
+        // as the game does it: a seat (the sled's, Draft Animals') is a doodad, and only its OnUseStop frees it; a bare
+        // AttachStop left the seat claimed, so another player standing up close couldn't sit down
+        Harness.Register("dismount", "dismount: get off whatever the player sits on", a =>
+        {
+            if (P.GetDoodadController() != null) P.StopDoodadControl();
+            else P.AttachStop();
+        });
+        Harness.Register("riders", "riders: how this client shows the other players: the seat flags on their animator vs in their ZDO, the animator state, distance to the sled's seat", a =>
+        {
+            var others = Player.GetAllPlayers().Where(p => p != P).ToList();
+            if (others.Count == 0) Harness.Log("no other players near");
+            foreach (var p in others)
+            {
+                var anim = p.GetComponentInChildren<Animator>();
+                var zdo = p.m_nview.GetZDO();
+                string Flag(string n) => $"{n}={(anim.GetBool(n) ? 1 : 0)}/zdo {zdo.GetInt(438569 + ZSyncAnimation.GetHash(n), -1)}";
+                var seat = sled ? sled.GetComponentInChildren<SledSeat>() : null;
+                var dist = seat ? Vector3.Distance(p.transform.position, seat.m_attachPoint.position) : -1f;
+                var state = anim.GetCurrentAnimatorStateInfo(0);
+                Harness.Log(Inv($"{p.GetPlayerName()}: {Flag("emote_sit")} {Flag("attach_chair")} state={state.shortNameHash} seatDist={dist:0.00} seatRider={(seat ? seat.GetRider() == p.GetPlayerID() : false)}"));
+            }
+        });
         Harness.Register("sledrec", "sledrec <seconds> [step=0.5]: the sled/beast state line every step", Record);
         Harness.Register("sledshot", "sledshot <name> [yaw=35] [pitch=20] [dist=6] [height=0.8] [focus=sled|beast|mid]: a screenshot around the sled (yaw from its front)", a =>
             Actions.CameraShot(a[0], Focus(a.Length > 5 ? a[5] : "sled"), Opt(a, 1, 35f), Opt(a, 2, 20f), Opt(a, 3, 6f), Opt(a, 4, 0.8f)));

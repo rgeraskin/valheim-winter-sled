@@ -100,9 +100,13 @@ Needs [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInEx
 
 Tested on Valheim 1.0.20 with BepInExPack 5.4.2351, Jötunn 2.30.2, Seasons 1.10.5 and Seasonality 3.8.4, single player and with two players; with Draft Animals 1.1.3, Beasts of Burden 1.0.8 and OdinHorse 1.9.3 in single player.
 
+## Bugs
+
+Sled acting up? Tell me on the [GitHub issues page](https://github.com/rgeraskin/valheim-winter-sled/issues): what happened, what it was on (snow, ice, a slope…), the mod's version and the other mods you play with. Ideas are welcome there too. The sled can't report bugs itself: on frozen ground it only scrapes and complains, and on bare ground it's too busy being a plough.
+
 ## Development
 
-Building, tests, the in-game test harness and releasing: [DEVELOPMENT.md](DEVELOPMENT.md).
+Source code: [GitHub](https://github.com/rgeraskin/valheim-winter-sled). Building, tests, the in-game test harness and releasing: [DEVELOPMENT.md](https://github.com/rgeraskin/valheim-winter-sled/blob/master/DEVELOPMENT.md).
 
 ## Credits
 
@@ -116,4 +120,4 @@ This mod — code, 3D model, translations, tests and this text — was made enti
 
 ## License
 
-MIT, see [LICENSE](LICENSE). The sound recordings keep their own licenses (CC0, CC BY), see Credits.
+MIT, see [LICENSE](https://github.com/rgeraskin/valheim-winter-sled/blob/master/LICENSE). The sound recordings keep their own licenses (CC0, CC BY), see Credits.

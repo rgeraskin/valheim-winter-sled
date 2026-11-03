@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.4
+
+- Multiplayer: a player sitting on a sled (or in a cart) now shows seated to everyone else too. Before, only the rider saw themselves sitting; the player pulling them and anyone nearby saw them standing in the sled. The game sends other players only some of a character's animation flags, and the sitting pose wasn't among them. Only the players who watch need this version: a rider with an older one shows seated to them too.
+- The description has a Bugs section: bugs and ideas go to the GitHub issues page. Its links to the developer notes and the license work on the mod sites too (they pointed to files next to the README).
+
 ## 0.2.3
 
 - Description update only; the mod itself is unchanged. The README and the mod page show screenshots: hauling through the Deep North, riding downhill, the frozen sea with Seasons, and a deer from Draft Animals pulling the sled.

@@ -36,7 +36,7 @@ Tools come from mise (`mise.toml`: dotnet 10, blender, ffmpeg). `VALHEIM_DIR` (m
 
 ## Releasing
 
-`.github/workflows/ci.yml` builds against the dedicated server's assemblies (steamcmd, anonymous) plus BepInExPack/Jötunn from Thunderstore (versions in `tools/ci/versions.env`). A tag `v<version>` runs `release.yml`: GitHub release + `tools/release/publish.cs` to Thunderstore, Hexium, Nexus Mods (settings in `tools/release/sites.json`; manual dispatch = dry run). The version lives in both `package/manifest.json` and `Plugin.Version`; CHANGELOG.md sections are `## <version>` and feed the release notes.
+`.github/workflows/ci.yml` builds against the dedicated server's assemblies (steamcmd, anonymous) plus BepInExPack/Jötunn from Thunderstore (versions in `tools/ci/versions.env`); it also runs every Monday, so a game update that breaks a Harmony patch fails `HarmonyPatchTests` without a push. A tag `v<version>` runs `release.yml`: GitHub release + `tools/release/publish.cs` to Thunderstore, Hexium, Nexus Mods (settings in `tools/release/sites.json`; manual dispatch = dry run). The version lives in both `package/manifest.json` and `Plugin.Version`; CHANGELOG.md sections are `## <version>` and feed the release notes.
 
 ## Conventions
 
